@@ -1,7 +1,5 @@
+// on ne voit pas l'animation de la barre car la durée de la nuit est trop longue
 
-// lier la taille de la barre au nombre total de prêts par jours
-// déterminer la décoration en fonction de la catégorie qui a fournit le plus de prêts ? rassembler les catégories en quatre grandes ?
-// déterminer quoi représenter avec ces quatres côtés
 // ramener les étoiles de prêt dans ce programme et afficher des légendes en overs sur toutes les piques.
 // jouer avec les ombres, soit avec la position de la souris soit avec un tracé prédéfini sur la durée des jours. (plutôt 2=
 // Les seuls contôles sont les overs, un slider pour se déplacer et un play pause
@@ -106,10 +104,10 @@ var back = 180
 function setShadows(){
 
 
-    back = -pow(map(frameCount%240,0,239,-1.5,1.5),50) + 255
+    back = -pow(map(frameCount%240,0,239,-1.1,1.1),25) + 255
     drawingContext.shadowOffsetX = map(frameCount%240,0,239,-25,25);
     drawingContext.shadowOffsetY =  pow(map(frameCount%240,0,239,-4,4),2) + 7;
-    drawingContext.shadowBlur = 5;
+    drawingContext.shadowBlur = 2;
     drawingContext.shadowColor = "black";
 
 
@@ -221,7 +219,7 @@ function Logo(lieu, sc) {
         fill(0)
         textFont(fontRegular)
         textSize(48)
-        this.l += (this.newL - this.l) * 0.095
+        this.l += (this.newL - this.l) * 0.075
         rect(-this.l / 2 - padding, -36, this.l, -3)
         rect(-this.l / 2 - padding, -72, 3, 36)
         textAlign(LEFT, CENTER);

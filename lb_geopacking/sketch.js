@@ -141,7 +141,7 @@ function draw() {
         fill(0)
         textFont(fontRegular)
         textSize(14)
-        text(emplacements[i] , 20,10+i*20,)
+        text(emplacements[i] , 20,10+i*20)
     }
 
 
