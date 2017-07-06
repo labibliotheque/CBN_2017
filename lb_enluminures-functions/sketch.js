@@ -152,9 +152,9 @@ function draw() {
 
     }
 
-    var val = (120- frameCount %120)/10;
+    var val = abs(pow(sin(map(frameCount%120,0,120,PI/2,PI)),6))*10;
 
-   // scribble.bowing = yourValue;          // changes the bowing of lines
+   scribble.bowing = val/5;          // changes the bowing of lines
     scribble.roughness = val;       // changes the roughness of lines
     //scribble.maxOffset = yourValue;       // coordinates will get an offset, here you define the max offset
     //scribble.numEllipseSteps = yourValue; // defines how much curves will be used to draw an ellipse
@@ -206,7 +206,7 @@ function Logo(lieu, sc) {
         textSize(48)
         this.l += (this.newL - this.l) * 0.075
         rect(-this.l / 2 - padding, -36, this.l, -3)
-        rect(-this.l / 2 - padding, -72, 3, 36)
+        rect(-this.l / 2 - padding, -72, -3, 36)
         textAlign(LEFT, CENTER);
         text(character, this.l / 2 - padding / 2 + spacing, -48)
         rect(this.l / 2 + padding + spacing + cWidth * 2 + spacing, -36, 10, -3)
