@@ -1,7 +1,7 @@
 
 // on peut optimiser en rendant la légende dans une texture et l'afficher, il faut recalculer l'image au resize par contre.
 // ajouter un over sur la souris pour entourer un vertex et afficher sa valeur => stocker les data temporairement dans chaque objet pour accéder plus facilement au valeurs
-// ajouter gui date de départ, date de fin, play / pause / stop , filtrage par lieux , par catégories documentaire ? vitesse de défilement des dates, durée d'interpolation vis et audio
+// ajouter gui date de départ, date de fin, play / pause / stop , ajustement de la rotation, vitesse de défilement des dates, durée d'interpolation.
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 var colorNames = ["bleu", "orange", "rouge", "vert", "jaune", "violet", "blanc"];
@@ -45,7 +45,7 @@ function setup() {
         , blanc: color(255, 255, 255, 255)
     }
     for (var i = 1; i < lieux.length; i++) {
-        stars.push(new Star(width / 6, width / 3, colors[colorNames[i - 1]]))
+        stars.push(new Star(width / 8, width / 2, colors[colorNames[i - 1]]))
     }
     stars.forEach(s => {
         s.initArrays()
@@ -54,7 +54,17 @@ function setup() {
 
 
 function draw() {
-    background(0);
+    //background(0);
+
+    push()
+    fill(0,10)
+    noStroke()
+    rect(0,0,windowWidth, windowHeight)
+
+
+    pop()
+
+
     // superposition d'étoiles
     push()
     translate(width / 4, height / 2)
@@ -62,6 +72,7 @@ function draw() {
         noFill();
         stroke(colors[colorNames[i]])
         stars[i].updatePoints();
+
         stars[i].draw();
         stars[i].drawLabel();
     }
@@ -78,6 +89,7 @@ function draw() {
             scale(0.15)
             stroke(c);
             fill(c);
+
             stars[i].draw();
             pop()
         }
@@ -118,6 +130,7 @@ function Star(innerR, outterR) {
     this.anglePortion = TWO_PI / this.limit;
     this.positions = []
     this.targets = []
+
     this.initArrays = function () {
         this.positions = []
         this.targets = []
@@ -139,16 +152,20 @@ function Star(innerR, outterR) {
     }
     this.updatePoints = function () {
         for (var i = 0; i < this.targets.length; i++) {
-            var dx = (this.targets[i].x - this.positions[i].x) * 0.5
-            var dy = (this.targets[i].y - this.positions[i].y) * 0.5
+            var dy = (this.targets[i].y - this.positions[i].y) * 0.05
+            var dx = (this.targets[i].x - this.positions[i].x) * 0.05
             this.positions[i].x = this.positions[i].x + dx
             this.positions[i].y = this.positions[i].y + dy
         }
     }
     this.draw = function () {
+
         push()
+        rotate(map(mouseX,0,windowWidth,0,TWO_PI))
         beginShape();
         vertex(this.innerRadius, 0)
+        strokeWeight(2)
+        strokeCap(ROUND)
         this.positions.forEach((p) => {
             vertex(p.x, p.y);
             //ellipse(p.x,p.y,10,10)
@@ -174,6 +191,7 @@ function Star(innerR, outterR) {
             var xpos = (this.innerRadius - 10) * cos(angle);
             var ypos = (this.innerRadius - 10) * sin(angle);
             push()
+            rotate(map(mouseX,0,windowWidth,0,TWO_PI))
             fill(255)
             noStroke()
             textFont(fontRegular);

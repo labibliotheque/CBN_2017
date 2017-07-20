@@ -1,7 +1,8 @@
+
+// Le L__A est un peu décentré sur la droite.
 // on ne voit pas l'animation de la barre car la durée de la nuit est trop longue
 
-// ramener les étoiles de prêt dans ce programme et afficher des légendes en overs sur toutes les piques.
-// jouer avec les ombres, soit avec la position de la souris soit avec un tracé prédéfini sur la durée des jours. (plutôt 2=
+// ramener les étoiles de prêt dans ce programme et afficher des légendes en overs sur toutes les piques ?
 // Les seuls contôles sont les overs, un slider pour se déplacer et un play pause
 // donner moins d'importance à la date graphiquement.
 
@@ -86,45 +87,22 @@ function preload() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight)
-    background(0)
+    background(255,0,0,1)
     randomSeed(3141);
 
     for (var i = 0 ; i < lieux.length; i++){
         logos.push(new Logo(lieux[i],0.5))
+        logos[i].setType(4)
     }
 
-    bleu = color(0, 165, 255)
-    orange = color(255, 220, 0)
-    rouge = color(255, 0, 0)
-    vert = color(0, 255, 150)
-    jaune = color(255, 255, 85)
-}
-
-var back = 180
-function setShadows(){
-
-
-    back = -pow(map(frameCount%240,0,239,-1.1,1.1),25) + 255
-    drawingContext.shadowOffsetX = map(frameCount%240,0,239,-25,25);
-    drawingContext.shadowOffsetY =  pow(map(frameCount%240,0,239,-4,4),2) + 7;
-    drawingContext.shadowBlur = 2;
-    drawingContext.shadowColor = "black";
-
-
 
 }
 
-function removeShadows(){
 
-    drawingContext.shadowOffsetX = 0;
-    drawingContext.shadowOffsetY = 0;
-    drawingContext.shadowBlur = 0;
-    drawingContext.shadowColor = "black";
-}
 
 function draw() {
-    background(back)
-   // translate(width / 2, height / 2)
+   background(255,50)
+
 
 
        // afficher la date
@@ -140,7 +118,7 @@ function draw() {
     //text(db[index].Tous.total + " prêts", width / 2, 60);
     pop()
 
-    if (frameCount % 240 == 0 && play) {
+    if (frameCount % 120 == 0 && play) {
 
         index += 1;
         for (var i = 0 ; i < lieux.length; i ++){
@@ -174,6 +152,13 @@ function draw() {
 
     }
 
+    var val = abs(pow(sin(map(frameCount%120,0,120,PI/2,PI)),6))*10;
+
+   scribble.bowing = val/5;          // changes the bowing of lines
+    scribble.roughness = val;       // changes the roughness of lines
+    //scribble.maxOffset = yourValue;       // coordinates will get an offset, here you define the max offset
+    //scribble.numEllipseSteps = yourValue; // defines how much curves will be used to draw an ellipse
+
     for (var i = 0 ; i < logos.length; i++){
         var x = (i % 3) * windowWidth/3 + windowWidth/6
         var y = int(i/3)*windowHeight/3 + windowHeight/3
@@ -188,13 +173,13 @@ function draw() {
 }
 
 function mousePressed() {
-
-
+    play = !play
+    /*
     for (var i = 0 ; i < logos.length; i++){
         logos[i].setType(int(random(7)))
         logos[i].setLength(random(25, 250))
 
-    }
+    }*/
 }
 
 function windowResized(){
@@ -212,7 +197,7 @@ function Logo(lieu, sc) {
 
     this.display = function () {
         push()
-        removeShadows()
+        //removeShadows()
         scale(this.scale)
         stroke(0)
         strokeWeight(1)
@@ -221,7 +206,7 @@ function Logo(lieu, sc) {
         textSize(48)
         this.l += (this.newL - this.l) * 0.075
         rect(-this.l / 2 - padding, -36, this.l, -3)
-        rect(-this.l / 2 - padding, -72, 3, 36)
+        rect(-this.l / 2 - padding, -72, -3, 36)
         textAlign(LEFT, CENTER);
         text(character, this.l / 2 - padding / 2 + spacing, -48)
         rect(this.l / 2 + padding + spacing + cWidth * 2 + spacing, -36, 10, -3)
@@ -229,7 +214,7 @@ function Logo(lieu, sc) {
         text(name, 0, 0)
         textSize(36)
         text(this.lieu, 0, 52)
-        setShadows()
+       // setShadows()
         push()
         rotate(PI / 4)
         translate(0, height / 4)
@@ -323,4 +308,22 @@ function Form() {
         scribble.scribbleLine(-scaleX / 2, -scaleY / 2, +scaleX / 2, -scaleY / 2)
         scribble.scribbleLine(-scaleX / 2, +scaleY / 2, +scaleX / 2, +scaleY / 2)
     }
+}
+
+
+var back = 180
+function setShadows(){
+    back = -pow(map(frameCount%120,0,120,-1.1,1.1),25) + 255
+    drawingContext.shadowOffsetX = map(frameCount%240,0,239,-25,25);
+    drawingContext.shadowOffsetY =  pow(map(frameCount%240,0,239,-4,4),2) + 7;
+    drawingContext.shadowBlur = 2;
+    drawingContext.shadowColor = "black";
+}
+
+function removeShadows(){
+
+    drawingContext.shadowOffsetX = 0;
+    drawingContext.shadowOffsetY = 0;
+    drawingContext.shadowBlur = 0;
+    drawingContext.shadowColor = "black";
 }

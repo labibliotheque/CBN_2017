@@ -3,7 +3,7 @@
 // faire apparaitre les cercles dans la journée manière séquentielle
 // ajouter des ambiances sonores granularisées captées sur chacun des lieux ou pas ...
 // ajuster l'évolution de la transparence en fonction de la durée moyenne d'un prêt
-// ajouter gui date de départ, date de fin, play / pause / stop , filtrage par lieux , par catégories documentaire ? vitesse de défilement des dates, durée d'interpolation vis et audio
+// ajouter gui date de départ, date de fin, play / pause / stop , filtrage par lieux , par catégories documentaire ? vitesse de défilement des dates
 
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
