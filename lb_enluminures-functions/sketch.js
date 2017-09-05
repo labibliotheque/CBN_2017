@@ -1,7 +1,5 @@
 
 // Le L__A est un peu décentré sur la droite.
-// on ne voit pas l'animation de la barre car la durée de la nuit est trop longue
-
 // ramener les étoiles de prêt dans ce programme et afficher des légendes en overs sur toutes les piques ?
 // Les seuls contôles sont les overs, un slider pour se déplacer et un play pause
 // donner moins d'importance à la date graphiquement.
@@ -75,14 +73,6 @@ function preload() {
     db = loadJSON("../data/db_06122017.json");
     fontBold = loadFont("../assets/RenneBolArcTyp.otf")
     fontRegular = loadFont("../assets/RenneArcTyp.otf")
-    name = "BIBLIOTHEQUE"
-    nameWidth = textWidth(name);
-    character = "A"
-    cWidth = textWidth("A")
-    spacing = 3
-    padding = cWidth + spacing
-
-    console.log(drawingContext)
 }
 
 function setup() {
@@ -94,6 +84,14 @@ function setup() {
         logos.push(new Logo(lieux[i],0.5))
         logos[i].setType(4)
     }
+
+    // calculate some font metrics
+    name = "BIBLIOTHEQUE"
+    nameWidth = textWidth(name);
+    character = "A"
+    cWidth = textWidth("A")
+    spacing = 3
+    padding = cWidth + spacing
 
 
 }
