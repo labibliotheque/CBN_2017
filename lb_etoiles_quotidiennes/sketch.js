@@ -1,7 +1,7 @@
-
 // on peut optimiser en rendant la légende dans une texture et l'afficher, il faut recalculer l'image au resize par contre.
-// ajouter un over sur la souris pour entourer un vertex et afficher sa valeur => stocker les data temporairement dans chaque objet pour accéder plus facilement au valeurs
-// ajouter gui date de départ, date de fin, play / pause / stop , ajustement de la rotation, vitesse de défilement des dates, durée d'interpolation.
+// remettre la rotation
+// ajouter un titre
+// ajouter des explications simples
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 var colorNames = ["bleu", "orange", "rouge", "vert", "jaune", "violet", "blanc"];
@@ -15,17 +15,18 @@ var emplacements = [
 ]
 var db
 var index = 1;
-var play = true
+var pindex = 1;
+var play = false
 var colors
 var fontBold
 var fontRegular
 var stars = [];
+var rotation;
 
 function preload() {
     db = loadJSON("../data/db_06122017.json");
     fontBold = loadFont("../assets/RenneBolArcTyp.otf")
     fontRegular = loadFont("../assets/RenneArcTyp.otf")
-
 }
 
 function setup() {
@@ -50,31 +51,34 @@ function setup() {
     stars.forEach(s => {
         s.initArrays()
     })
+    pg = createGraphics(windowWidth, windowHeight);
+    // gui
+    button = createButton('Play');
+    button.mousePressed(makeplay);
+    button.position(25, windowHeight - 75);
+    button.size(75, 50);
+    nDays = Object.keys(db).length - 1;
+    slider = createSlider(1, nDays, 1, 1);
+    slider.position(windowWidth / 4, windowHeight - 75);
+    slider.size(windowWidth / 2, 50);
+    title = new Title();
+    legend = new Legend();
 }
 
-
 function draw() {
-    //background(0);
-
-    push()
-    fill(0,10)
-    noStroke()
-    rect(0,0,windowWidth, windowHeight)
-
-
-    pop()
-
-
-    // superposition d'étoiles
+    background(0);
+    image(pg, 0, 0)
+    pg.background(0, 10)
+        // superposition d'étoiles
     push()
     translate(width / 4, height / 2)
     for (var i = 0; i < stars.length; i++) {
         noFill();
         stroke(colors[colorNames[i]])
         stars[i].updatePoints();
-
-        stars[i].draw();
+        stars[i].drawOffscreen(colors[colorNames[i]]);
         stars[i].drawLabel();
+        stars[i].isOver(mouseX - width / 4, mouseY - height / 2, colors[colorNames[i]])
     }
     pop();
     // étoiles individuelles
@@ -89,7 +93,6 @@ function draw() {
             scale(0.15)
             stroke(c);
             fill(c);
-
             stars[i].draw();
             pop()
         }
@@ -99,38 +102,68 @@ function draw() {
         pop()
     }
     pop();
-    // se déplacer d'un jour dans la base de données
-    if (frameCount % 60 == 0 && play) {
-        index += 1;
+    pindex = index;
+    index = int(slider.value());
+    if (pindex != index) {
         for (var i = 0; i < stars.length; i++) {
             stars[i].updateTargets(db[index][lieux[i + 1]], lieux[i + 1])
         }
     }
-
-        // afficher la date
+    // se déplacer d'un jour dans la base de données
+    if (frameCount % 90 == 0 && play) {
+        slider.elt.valueAsNumber += 1;
+    }
+    // display the date
+    push();
+    textAlign(CENTER, BOTTOM)
     fill(255);
     stroke(255);
     var d = db[index].date.split("/")
     var date = new Date(d[2], d[0] - 1, d[1])
-    textSize(36)
-    text(jours[date.getDay()] + " " + date.getDate() + " " + mois[date.getMonth()] + " " + date.getFullYear(), width / 2, 20);
-    textSize(24)
-    text(db[index].Tous.total + " prêts", width / 2, 60);
+    var content = jours[date.getDay()] + " " + date.getDate() + " " + mois[date.getMonth()] + " " + date.getFullYear() + " : " + db[index].Tous.total + " prêts";
+    var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
+    textFont(fontRegular)
+    textSize(16)
+    text(content, windowWidth / 2, windowHeight - 75);
+    pop()
+        // draw the title which reacts to the data
+    title.update();
+    title.draw();
+    // draw explanations
+    legend.isOver(mouseX,mouseY);
+    legend.draw();
+}
+// play & pause button
+function makeplay() {
+    play = !play
+    if (!play) {
+        button.elt.innerHTML = "Play";
+    }
+    else {
+        button.elt.innerHTML = "Pause";
+    }
 }
 
-function mousePressed() {
-    play = !play
+function mouseDragged() {
+    rotation = map(mouseX, 0, windowWidth, 0, TWO_PI)
+}
+
+function windowResized() {
+    resizeCanvas(windowWidth, windowHeight)
+    slider.size(windowWidth / 2, 50);
+    slider.position(windowWidth / 4, windowHeight - 75);
+    button.position(25, windowHeight - 75);
+    pg = createGraphics(width, height);
 }
 
 function Star(innerR, outterR) {
     this.innerRadius = innerR;
     this.maxRadius = outterR;
-    console.log(this.innerRadius, this.maxRadius);
     this.limit = emplacements.length;
     this.anglePortion = TWO_PI / this.limit;
     this.positions = []
     this.targets = []
-
+    this.data = []
     this.initArrays = function () {
         this.positions = []
         this.targets = []
@@ -141,6 +174,7 @@ function Star(innerR, outterR) {
             var v4 = createVector(xpos2, ypos2);
             this.positions.push(v3);
             this.targets.push(v4);
+            this.data.push(0);
         }
     }
     this.updateTargets = function (data, lieu) {
@@ -148,6 +182,7 @@ function Star(innerR, outterR) {
             var xpos = (map((int(data[emplacements[i]])), 0, int(db[0]["Max_Tous"]), this.innerRadius, this.innerRadius + this.maxRadius)) * cos(map(i, 0, this.limit, this.anglePortion / 2, TWO_PI));
             var ypos = (map((int(data[emplacements[i]])), 0, int(db[0]["Max_Tous"]), this.innerRadius, this.innerRadius + this.maxRadius)) * sin(map(i, 0, this.limit, this.anglePortion / 2, TWO_PI));
             this.targets[i].set(createVector(xpos, ypos));
+            this.data[i] = (int(data[emplacements[i]]));
         }
     }
     this.updatePoints = function () {
@@ -159,18 +194,48 @@ function Star(innerR, outterR) {
         }
     }
     this.draw = function () {
-
         push()
-        rotate(map(mouseX,0,windowWidth,0,TWO_PI))
         beginShape();
         vertex(this.innerRadius, 0)
         strokeWeight(2)
         strokeCap(ROUND)
         this.positions.forEach((p) => {
             vertex(p.x, p.y);
-            //ellipse(p.x,p.y,10,10)
         });
         endShape(CLOSE);
+        pop()
+    }
+    this.drawOffscreen = function (c) {
+        pg.push()
+        pg.translate(width / 4, height / 2)
+        pg.beginShape();
+        pg.vertex(this.innerRadius, 0)
+        pg.strokeWeight(3)
+        pg.noFill();
+        pg.stroke(c)
+            // pg.strokeCap(ROUND)
+        this.positions.forEach((p) => {
+            vertex(p.x, p.y);
+        });
+        pg.endShape(CLOSE);
+        pg.pop()
+    }
+    this.isOver = function (xpos, ypos, c) {
+        push()
+        textSize(18)
+        for (var i = 0; i < this.positions.length; i++) {
+            if (dist(xpos, ypos, this.positions[i].x, this.positions[i].y) < 7) {
+                fill(c)
+                var offsetX
+                var offsetY
+                if (this.positions[i].x < 0) offsetX = -pow(map(this.positions[i].x, 0, -width / 4, 2000, 500), 1 / 2)
+                else offsetX = pow(map(this.positions[i].x, 0, width / 4, 2000, 500), 1 / 2)
+                if (this.positions[i].y < 0) offsetY = -pow(map(this.positions[i].y, 0, -height / 2, 2000, 500), 1 / 2)
+                else offsetY = pow(map(this.positions[i].y, 0, height / 2, 2000, 500), 1 / 2)
+                ellipse(this.positions[i].x, this.positions[i].y, 10, 10)
+                text(emplacements[i] + " : " + int(this.data[i]) + " prêts", this.positions[i].x + offsetX, this.positions[i].y + offsetY);
+            }
+        }
         pop()
     }
     this.drawInfo = function (data, lieu) {
@@ -191,11 +256,10 @@ function Star(innerR, outterR) {
             var xpos = (this.innerRadius - 10) * cos(angle);
             var ypos = (this.innerRadius - 10) * sin(angle);
             push()
-            rotate(map(mouseX,0,windowWidth,0,TWO_PI))
             fill(255)
             noStroke()
             textFont(fontRegular);
-            textSize(18)
+            textSize(16)
             textAlign(RIGHT, CENTER);
             translate(xpos, ypos)
             rotate(angle)
@@ -206,6 +270,93 @@ function Star(innerR, outterR) {
     }
 }
 
-function windowResized() {
-    resizeCanvas(windowWidth, windowHeight);
+function Title() {
+    this.newL = 0;
+    this.l = 0;
+    // calculate some font metrics
+    this.name = "BIBLIOTHEQUE"
+    this.nameWidth = textWidth(name);
+    this.character = "A"
+    this.cWidth = textWidth("A")
+    this.spacing = 3
+    this.padding = this.cWidth + this.spacing;
+    this.update = function () {
+        var total = 0
+        for (var i = 0; i < lieux.length; i++) {
+            total += int(db[index][lieux[i]].total)
+        }
+        this.newL = map(total, 0, db[0]["Max_Total"], 25, 500)
+    }
+    this.draw = function () {
+        push()
+        rectMode(CORNER);
+        translate(25, 25);
+        stroke(255)
+        strokeWeight(1)
+        fill(255)
+        textFont(fontRegular)
+        textSize(48)
+        this.l += (this.newL - this.l) * 0.075
+            // draw L with variable length
+        rect(0, 36, this.l, -3)
+        rect(0, 0, -3, 36)
+            // draw A
+        textAlign(LEFT, TOP);
+        text(this.character, this.l + this.spacing, 0)
+        text(this.name + " : Statistiques ", this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
+        pop();
+    }
+}
+
+function Legend() {
+    this.over = false;
+
+    this.draw = function () {
+        if (this.over) {
+            noStroke()
+            fill(0,100)
+            rect(0, 0, windowWidth, windowHeight)
+            textSize(16);
+            fill(255)
+            textAlign(LEFT, TOP)
+            text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 38, 106)
+            drawArrow(40, 100, -HALF_PI, 20)
+            textAlign(LEFT, BOTTOM)
+            text("Cliquez ici pour parcourir les statistiques journalières séquentiellement", 50, windowHeight - 140)
+            drawArrow(54, windowHeight - 136, HALF_PI, 50)
+            var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
+            text("Déplacez ce curseur pour changer la date manuellement", xoffset, windowHeight - 120)
+            drawArrow(xoffset + 4, windowHeight - 116, HALF_PI, 36), textAlign(CENTER, CENTER)
+            textSize(18)
+            text("Passer vôtre souris au dessus des arrêtes de l'étoile pour obtenir des données par type d'ouvrage", width / 2, height / 4)
+
+        }
+        push()
+        translate(windowWidth - 25, 25);
+        fill(180)
+        noStroke()
+        ellipse(0, 0, 25, 25)
+        textAlign(CENTER, CENTER);
+        fill(0)
+        textSize(20)
+        text("?", 0, 0)
+        pop()
+    }
+    this.isOver = function (xpos, ypos) {
+        if (dist(xpos, ypos, windowWidth - 25, 25) < 25) this.over = true;
+        else this.over = false;
+    }
+}
+
+function drawArrow(xpos, ypos, rot, s) {
+    push()
+    strokeWeight(3);
+    fill(50, 220, 255)
+    stroke(50, 220, 255)
+    translate(xpos, ypos)
+    rotate(rot)
+    line(0, 0, s, 0)
+    strokeWeight(1);
+    triangle(s, s / 5, s + s / 4, 0, s, -s / 5)
+    pop()
 }
