@@ -13,20 +13,45 @@ var lieux = [
 ];
 /* Emplacements */
 var emplacements = [
-    "albums", "arts", "graphisme", "bd adultes", "bd jeunesse", "cinema adultes", "cinema jeunesse", "cinema", "danse", "geographie", "histoire", "informatique", "jeux d'assemblage", "jeux d'exercices", "livres sur les jeux", "jeux a regles", "jeux symboliques", "jeux video", "langues", "litterature", "loisirs creatifs", "musique adultes", "musique jeunesse", "philosophie", "presse", "fonds pro", "psychologie", "romans adultes", "romans jeunesse", "religions", "sciences", "societe", "sports et loisirs", "vie pratique", "theatre"
+    "arts","cinema adultes", "cinema jeunesse", "graphisme","danse","musique adultes","musique jeunesse","theatre","albums","bd adultes","bd jeunesse","litterature", "romans adultes","romans jeunesse","geographie",
+ 	"histoire",
+ 	"informatique",
+ 	"langues",
+ 	"loisirs creatifs",
+ 	"philosophie",
+ 	"psychologie",
+ 	"sciences",
+	"fonds pro",
+    "presse",
+ 	"societe",
+ 	"sports et loisirs",
+ 	"vie pratique",
+    "livres sur les jeux",
+    "jeux d'assemblage",
+ 	"jeux d'exercices",
+ 	"jeux a regles",
+ 	"jeux symboliques",
+	"jeux video",
 ]
 var db
-var index = 1;
+//
+var fontBold
+var fontRegular
+// buffers
+var buffer; // audio
+var imgBuffer, img; // graphic
+//gui
+var settings
+// sequencing
+var click
+var myPart // un metronome
+var index = 1 // la position du sequenceur
+var playbackS = 60 // la vitesse de défilement
 var stopIndex = 31;
 var loop = true;
 var play = true;
-var playbackS = 5;
 var interSpeed = 0.85;
-var fontBold
-var fontRegular
-var buffer;
-var imgBuffer, img;
-var settings
+
 
 function preload() {
     db = loadJSON("../data/db_06122017.json");
@@ -40,6 +65,8 @@ function preload() {
     for (var i = 0; i < bufferSize; i++) {
         data[i] = 0;
     }
+
+    click = loadSound("../assets/134062__allibrante__allibrante-impulse-waveform-1.wav");
 }
 
 function setup() {
@@ -56,13 +83,22 @@ function setup() {
     node.connect(p5.soundOut);
     node.start(0);
     //
+    myPart = new p5.Part();
+    var pulse = new p5.Phrase('pulse', step, [1, 1, 1, 1]);
+    myPart.addPhrase(pulse); // on ajoute notre phrase à l'objet part
+    myPart.setBPM(playbackS);
+    myPart.start();
+    myPart.loop();
+    //
     img = createGraphics(windowWidth, windowHeight);
     imgBuffer = createGraphics(windowWidth, windowHeight);
     imgBuffer.background(0);
     img.background(0);
     imgBuffer.colorMode(HSB, 360, 100, 100);
     title = new Title();
-    settings = QuickSettings.create(windowWidth - 450, 0, "Informations et parmètres");
+
+
+    settings = QuickSettings.create(windowWidth - 475, 25, "Informations et parmètres");
     settings.setWidth(450);
     settings.addHTML("Informations", "<p>Cette page web permet de sonifier les données issues des statistiques de prêts. Les données sont interprétés comme des signaux audio (valeurs entre -1 et 1) et sont directement injectées dans la carte son de l'ordinateur. Chaque jour dispose alors d'un son qui lui est propre généré directement à partir des statistiques d'emprunts des usagers.");
     settings.addHTML("Sélectionner les lieux à traiter", "");
@@ -78,7 +114,7 @@ function setup() {
     settings.addBoolean("Boucler", true, loopCallback);
     settings.addHTML("Paramètres de Défilement", "");
     settings.addBoolean("Jouer", true, playBack);
-    settings.addRange("Vitesse", 5, 90, 55, -1, playbackSpeed);
+    settings.addRange("Vitesse", 10, 90, 60, 1, playbackSpeed);
     settings.addRange("Vitesse d'interpolation", 0.05, 0.9, 0.80, 0.05, interpolationSpeed);
 
 }
@@ -97,27 +133,23 @@ function draw() {
             index = 1;
         }
     }
-    // se déplacer d'un jour dans la base de données
-    if ((frameCount % playbackS) == 0 && play) {
-        index += 1;
-       // imgBuffer.push();
-        imgBuffer.stroke(255);
-        imgBuffer.fill(0,0.05);
-        imgBuffer.rect(0,windowHeight/2,imgBuffer.width*2/3,windowHeight/2 -160);
-       // imgBuffer.pop()
-    }
+
 
     if (play) update();
+
     for (var i = 0; i < emplacements.length; i++) {
         push();
         textSize(18);
+        textAlign(RIGHT,TOP);
         var xpos = map(i, 0, emplacements.length, 0, windowWidth * 2 / 3);
-        translate(xpos, windowHeight);
+        translate(xpos, windowHeight-158);
         rotate(-PI / 2);
         fill(map(i, 0, emplacements.length, 0, 320), 100, 100)
         text(emplacements[i], 0, 0);
-        pop();
+         pop();
+
     }
+
     push()
     textAlign(LEFT, BOTTOM);
     fill(255);
@@ -132,12 +164,35 @@ function draw() {
     title.draw();
 }
 
+function step() {
+
+    if (play){
+
+        var rate = map(db[index].Tous.total, 0, int(db[0]["Max_Tous"]),32,52)
+        click.play(0,rate,0.25);
+        index += 1;
+
+        imgBuffer.noStroke();
+        imgBuffer.fill(0,0.05);
+        imgBuffer.rect(0,0,imgBuffer.width*2/3,windowHeight -160);
+        imgBuffer.stroke(255,0.5);
+        imgBuffer.strokeWeight(5);
+        imgBuffer.line(imgBuffer.width*2/3,windowHeight/2,imgBuffer.width*2/3,windowHeight-160);
+
+
+    }
+
+
+}
+
 function playBack(data) {
     play = data;
+    myPart.stop();
 }
 
 function playbackSpeed(data) {
     playbackS = data;
+    myPart.setBPM(playbackS);
 }
 
 function interpolationSpeed(data) {
@@ -169,8 +224,10 @@ function selectDateE() {
     var date = new Date(int(selectedStopDate[0]), int(selectedStopDate[1] - 1), int(selectedStopDate[2]));
     date = date.toLocaleDateString();
     for (var i = 1; i < Object.keys(db).length - 1; i++) {
+
         if (db[i]["date"] == date) {
-            stropIndex = i
+            stopIndex = i
+
             break
         }
     }
@@ -184,8 +241,8 @@ function update() {
     imgBuffer.image(img, xoffset, yoffset, img.width, img.height);
     //buffer.filter(BLUR,0.48); // le blur est un peu gourmand à haute résolution
     // on le remplace par le "blur du pauvre" : un rectangle noir très transparent
-    imgBuffer.fill(0, 0.0021);
-    imgBuffer.rect(0, 0, img.width, img.height)
+    //imgBuffer.fill(0, 0.0021);
+    //imgBuffer.rect(0, 0, img.width, img.height)
     updateAudioBuffer()
     img = imgBuffer;
 }
@@ -195,13 +252,8 @@ function updateAudioBuffer() {
     var indexLieu
     var indexEmplacement
     imgBuffer.strokeWeight(0.5)
-        /*
-        for (var i = 0; i < bufferSize / 100; i++) {
-            imgBuffer.stroke(255,0.5)
-            imgBuffer.strokeWeight(0.15)
-            var y = map(abs(data[i]), 1, 0, imgBuffer.height, windowHeight - 125);
-            imgBuffer.line(-imgBuffer.width*2, y + random(-100, 100), imgBuffer.width *2, y + random(-100, 100));
-        }*/
+
+
     for (var i = 0; i < bufferSize; i++) {
         indexLieu = int(i / 5) % lieux.length
         indexEmplacement = int(int(i / 5) / lieux.length)
@@ -234,8 +286,9 @@ function updateAudioBuffer() {
         }
         var xpos = map(i, 0, bufferSize, 5, windowWidth * 2 / 3)
         var hei = map(data[i], 0, 1, 1, windowHeight / 2)
-            //imgBuffer.stroke(255,5);
-        imgBuffer.noStroke();
+        imgBuffer.strokeWeight(0.25);
+        imgBuffer.stroke(255);
+        //imgBuffer.noStroke();
         imgBuffer.fill(map(indexEmplacement, 0, emplacements.length, 0, 320), 100, 100);
         imgBuffer.rect(xpos, windowHeight - 160, windowWidth / bufferSize, -hei);
     }
