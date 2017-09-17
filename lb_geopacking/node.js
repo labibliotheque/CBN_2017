@@ -29,14 +29,14 @@ function Node(x, y, h, diam, data) {
     this.location = createVector(x, y, 0);
     this.velocity = createVector(0, 0, 0);
     this.pVelocity = createVector(0, 0, 0);
-    this.maxVelocity = 9;
-    this.damping = 0.05;
+    this.maxVelocity = 1.5;
+    this.damping = 0.001;
     // radius of impact
-    this.radius = diam * 1.4;
+    this.radius = diam * 3;
     // strength: positive for attraction, negative for repulsion (default for Nodes)
     this.strength = 1;
     // parameter that influences the form of the function
-    this.ramp = 0.50;
+    this.ramp = 0.15;
     this.h = h || 0;
     this.data = data || null;
     this.displayData = false;
@@ -61,6 +61,8 @@ Node.prototype.update = function () {
     this.location.x += this.velocity.x;
     this.location.y += this.velocity.y;
     this.location.z += this.velocity.z;
+
+    /*
     if (this.location.x < this.minX +this.diameter) {
 
         //this.location.x = this.minX - (this.location.x - this.minX);
@@ -77,25 +79,42 @@ Node.prototype.update = function () {
     if (this.location.y > this.maxY-this.diameter) {
         this.location.y = this.maxY - this.diameter
         this.velocity.y = -this.velocity.y;
-    }
+    }*/
     this.velocity.mult(1 - this.damping);
 }
 Node.prototype.display = function () {
     push();
     noStroke();
     fill(this.h,100,100,this.life);
-    ellipse(this.location.x, this.location.y, this.diameter, this.diameter);
+    var diam = constrain(this.diameter,0.5, this.diameter);
+    ellipse(this.location.x, this.location.y, diam, diam);
     pop();
 }
-Node.prototype.over = function (x, y) {
 
+Node.prototype.displayOffscreen = function (pg, nodes) {
+    pg.push();
+    pg.noStroke();
+    //pg.strokeWeight(1);
+    //pg.stroke(this.h,72,100);
+    //pg.noStroke();
+    pg.fill(this.h,72,100,100,0.15);
+    var diam = constrain(this.diameter/5,0.5,25);
+    pg.ellipse(this.location.x, this.location.y, diam, diam);
+    //pg.point(this.location.x, this.location.y)
+
+    pg.pop();
+}
+
+Node.prototype.over = function (x, y) {
+    push()
+    textAlign(CENTER,CENTER)
     var delta = dist(x, y, this.location.x, this.location.y);
 
-        if (delta < this.diameter/2) {
+        if (delta < 10 + this.diameter) {
             push()
-            fill(0)
+            fill(255)
             textFont(fontRegular)
-            textSize(14)
+            textSize(18)
             text(this.data.lieu + " - " + this.data.date  ,this.location.x,this.location.y-16)
             text(this.data.emplacement,this.location.x,this.location.y)
             text(this.data.valeur,this.location.x,this.location.y+16)
@@ -105,5 +124,5 @@ Node.prototype.over = function (x, y) {
         else {
 
         }
-
+    pop()
 }

@@ -368,7 +368,7 @@ function Legend() {
             text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 38, 106)
             drawArrow(40, 100, -HALF_PI, 20)
             textAlign(LEFT, BOTTOM)
-            text("Cliquez ici pour parcourir les statistiques journalières automatiquement", 50, windowHeight - 140)
+            text("Cliquez ici pour parcourir les statistiques journalières séquentiellement", 50, windowHeight - 140)
             drawArrow(54, windowHeight - 136, HALF_PI, 50)
             var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
             text("Déplacez ce curseur pour changer la date manuellement", xoffset, windowHeight - 120)
@@ -398,8 +398,8 @@ function Legend() {
 function drawArrow(xpos, ypos, rot, s) {
     push()
     strokeWeight(3);
-    fill(255, 50, 50)
-    stroke(255, 50, 50)
+    fill(50, 220, 255)
+    stroke(50, 220, 255)
     translate(xpos, ypos)
     rotate(rot)
     line(0, 0, s, 0)
