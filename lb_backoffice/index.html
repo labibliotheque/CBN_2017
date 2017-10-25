@@ -1,0 +1,126 @@
+<html>
+<head>
+
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+
+<link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/js/bootstrap.min.js" integrity="sha384-Tc5IQib027qvyjSMfHjOMaLkfuWVxZxUPnCJA7l2mCWNIpG9mGCD8wGNIcPD7Txa" crossorigin="anonymous"></script>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jquery-csv/0.8.3/jquery.csv.min.js"></script>
+
+<script src="backoffice.js"></script>
+
+</head>
+
+<body>
+
+    <div class="container">
+
+        <h1>Backoffice</h1>
+
+        <div class="row">
+            
+            <div class="col-md-4">
+                <h3>Compte Github</h3>
+                <p class="text-muted">Vous devez disposer des droits en écriture sur le référentiel github.</p>
+                <label label-for="gh-login">Login</label>
+                <input id="gh-login">
+                <br>
+                <label label-for="gh-pwd">Mot de passe</label>
+                <input id="gh-pwd" type="password">
+                <br>
+                <button id="bt-connect" onclick="ghConnect(event)">Connexion</button>
+            </div>
+
+            <div class="col-md-4">
+                
+                <p>Veuillez coller le contenu de votre tableur dans la zone ci-dessous :</p>
+
+                <textarea id="tainput"></textarea>
+
+                <div class="text-muted">
+                    Votre tableur doit correspondre au format suivant : <br>
+                    <table class="table-bordered text-muted">
+                        <tr>
+                            <td>Lieu de prêt</td>
+                            <td>Emplacement</td>
+                            <td>Nb prêt<br>02/01/17</td>
+                            <td>Nb prêt<br>03/01/17</td>
+                            <td>Nb prêt<br>...etc</td>
+                        </tr>
+                        <tr>
+                            <td>Tous</td>
+                            <td></td>
+                            <td>nombre</td>
+                            <td>nombre</td>
+                            <td>nombre...</td>
+                        </tr>
+                        <tr>
+                            <td>Lieu 1</td>
+                            <td>TOTAL</td>
+                            <td>nombre</td>
+                            <td>nombre</td>
+                            <td>nombre...</td>
+                        </tr>
+                        <tr>
+                            <td>Lieu 1</td>
+                            <td>emplacement 1</td>
+                            <td>nombre</td>
+                            <td>nombre</td>
+                            <td>nombre...</td>
+                        </tr>
+                        <tr>
+                            <td>Lieu 1</td>
+                            <td>emplacement 2</td>
+                            <td>nombre</td>
+                            <td>nombre</td>
+                            <td>nombre...</td>
+                        </tr>
+                        <tr>
+                            <td>Lieu 2</td>
+                            <td>emplacement 1</td>
+                            <td>nombre</td>
+                            <td>nombre</td>
+                            <td>nombre...</td>
+                        </tr>
+                        <tr>
+                            <td colspan="5">...</td>
+                        </tr>
+                    </table>
+                </div>
+
+            </div>
+
+             <div class="col-md-4">
+                
+                <button id="bt-push" onclick="push_data(event)">
+                    PUSH !!!
+                </button>
+                
+            </div>
+
+
+        </div>
+    
+
+
+
+   
+    
+
+
+        <div class="row">
+            
+            <div class="col-md-12">
+                <h3>Debug</h3>
+
+                <div id="debug"></div>
+                
+            </div>
+
+
+        </div>    
+    </div>
+</body>
+
+</html>
