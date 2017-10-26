@@ -3,9 +3,13 @@
 // 1 - importer un nouveau mois (ou supprimer ou remplacer)
 // 2 - générer le json final pour une periode donnée (reparsing des tableurs ou generation json ?) => storage du csv raw quand même pour futur récuération / si errors
 
-var repositoryEndPoint = window.location.hostname == "localhost" ? "http://localhost:4567" : "http://localhost:6666" // TODO put github URL !
+
+var repositoryEndPoint = window.location.hostname == "localhost" ? "http://localhost:4567" : "http://localhost:6666" // TODO put github URL : https://api.github.com
 var repositoryOwner = "labibliotheque"
 var repositoryName = "CBN_2017"
+var repositoryBranch = "gh-pages"
+var dbPath = "data/db_06122017.json" // TODO no date in file name
+
 
 // TODO utiliser les data calculer comme check sum plutôt que se baser dessus !
 
@@ -14,6 +18,13 @@ var repositoryName = "CBN_2017"
 var currentContent = null
 var currentMonth = null
 
+// utf8 base64 support from https://developer.mozilla.org/fr/docs/D%C3%A9coder_encoder_en_base64
+function utf8_to_b64( str ) {
+  return window.btoa(unescape(encodeURIComponent( str )));
+}
+function b64_to_utf8( str ) {
+  return decodeURIComponent(escape(window.atob( str )));
+}
 
 
 function ghConnect(event){
@@ -59,6 +70,7 @@ function push_data(event){
     content = currentContent
 
     var data = {
+        branch: repositoryBranch,
         message: "the commit message",
         content: btoa(JSON.stringify(content, null, "  "))
     }
@@ -75,6 +87,86 @@ function push_data(event){
 
 }
 
+function merge_data(event){
+
+    // TODO fail case ...
+    github_get_content( dbPath, function( data ) {
+        console.log(data)
+
+        sha = data.sha
+        content = JSON.parse(b64_to_utf8(data.content))
+
+        //TODO add new json (without max) in original json
+        for(var i=1 ; i<currentContent.length ; i++){
+            content.push(currentContent[i])
+        }
+
+        //content = {test: "légende"} // XXX test
+        
+        // // TODO update the max
+        // // TODO push
+
+        github_patch_file(dbPath, sha, content)
+
+    }, function(){
+        console.error("problem ...")
+    })
+
+
+
+}
+
+function github_get_content(filePath, success, error){
+
+    var ghUsername = $('#gh-login').val()
+    var ghPassword = $('#gh-pwd').val()
+
+    $.ajax({
+        type: "GET",
+        url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + filePath + "?ref=" + repositoryBranch,
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
+        },
+        success: success,
+        error: error
+    });
+
+}
+
+function github_patch_file(filePath, sha, newContent){
+
+    var ghUsername = $('#gh-login').val()
+    var ghPassword = $('#gh-pwd').val()
+
+    var data = {
+        branch: repositoryBranch,
+        message: "the commit message",
+        sha: sha,
+        content: utf8_to_b64(JSON.stringify(newContent, null, "  "))
+    }
+
+    $.ajax({
+        type: "PUT",
+        url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + filePath,
+        contentType: "application/json",
+        data: JSON.stringify(data, null, "  "),
+        beforeSend: function (xhr) {
+            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
+        },
+        success: function(){
+            console.log("ok")
+        },
+        error: function(){
+            console.error("error ?")
+        }
+    });
+
+}
+
+// TODO GET /repos/:owner/:repo/pages/builds/latest pour voir quand les data sont bien à jour : see https://developer.github.com/v3/repos/pages/#request-a-page-build
+
+
+
 $(function(){
    
 
@@ -87,9 +179,6 @@ $(function(){
           text = window.clipboardData.getData("Text");
         else if (event.originalEvent && event.originalEvent.clipboardData)
           text = event.originalEvent.clipboardData.getData("Text");
-
-
-        // console.log(text)
 
         parse_raw_data(text)
     });

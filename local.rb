@@ -1,3 +1,5 @@
+# encoding: UTF-8
+
 # GITHUB API emulator
 # launch with :
 # $ ruby -I . local.rb
@@ -6,6 +8,8 @@
 require 'sinatra'
 require "base64"
 require "json"
+
+set :public_folder, '.'
 
 helpers do
   def protected!
@@ -20,7 +24,6 @@ helpers do
 end
 
 
-set :public_folder, '.'
 # https://developer.github.com/v3/repos/contents/#create-a-file
 
 get '/user' do 
@@ -28,6 +31,16 @@ get '/user' do
 
     content_type :json
     { fake: "fake" }.to_json
+end
+
+get '/repos/:owner/:repo/contents/*' do |owner, repo, *remain|
+    path = params['splat'].first
+    halt 404 unless File.exists?(path)
+    content_type :json, charset: 'utf-8'
+    {
+        sha: 'fake SHA code for this blob',
+        content: Base64.encode64(File.read(path))
+    }.to_json
 end
 
 put '/repos/:owner/:repo/contents/*' do |owner, repo, *remain|
@@ -40,13 +53,8 @@ put '/repos/:owner/:repo/contents/*' do |owner, repo, *remain|
     
     data = JSON.parse(request.body.read)
 
-    p data
+    content = Base64.decode64(data["content"]).force_encoding("UTF-8").encode
 
-    content = Base64.decode64(data["content"])
-
-    p content
-
-    # TODO write file
     File.write(path, content)
 
     content_type :json
