@@ -3,21 +3,24 @@
 // 1 - importer un nouveau mois (ou supprimer ou remplacer)
 // 2 - générer le json final pour une periode donnée (reparsing des tableurs ou generation json ?) => storage du csv raw quand même pour futur récuération / si errors
 
-
+// Configuration variables
+//
 var repositoryEndPoint = window.location.hostname == "localhost" ? "http://localhost:4567" : "http://localhost:6666" // TODO put github URL : https://api.github.com
 var repositoryOwner = "labibliotheque"
 var repositoryName = "CBN_2017"
 var repositoryBranch = "gh-pages"
 var dbPath = "data/db_06122017.json" // TODO no date in file name
 
-
-// TODO utiliser les data calculer comme check sum plutôt que se baser dessus !
-
-// TODO calculer le "top-emplacement"
-
+// Global context variables
+//
 var currentContent = null
 var currentMonth = null
 var diagnostic = null
+var currentSHA = null
+var currentDB = null
+var monthMap = null
+var locationMap = {}
+var categoryMap = {}
 
 // utf8 base64 support from https://developer.mozilla.org/fr/docs/D%C3%A9coder_encoder_en_base64
 function utf8_to_b64( str ) {
@@ -45,7 +48,8 @@ function ghConnect(event){
             console.log(status)
             console.log(data)
 
-            // TODO need to load current DB to merge categories !
+            // TODO need to load current DB to merge categories : yes !
+            loadCurrentDB()
 
         },
         error: function(xhr, status, message){
@@ -55,6 +59,53 @@ function ghConnect(event){
     });
 
 }
+
+function loadCurrentDB(){
+
+
+    github_get_content( dbPath, function( data ) {
+        console.log(data)
+
+        sha = data.sha
+        currentDB = JSON.parse(b64_to_utf8(data.content))
+
+        // TODO display
+        monthMap = {}
+        for(var i=1 ; i<currentDB.length ; i++){
+            var jsonDay = currentDB[i]
+            var array = jsonDay.date.split("/")
+            var month = parseInt(array[0]) - 1
+            var year = parseInt(array[2])
+            monthMap[month + "/" + year] = new Date(year, month, 1)
+        }
+
+        var info = "Periodes : <br>"
+        for(month in monthMap){
+            info += monthMap[month].toLocaleString("fr", { month: "long" }) + " " + monthMap[month].getFullYear() + "<br>"
+        }
+
+
+        $('#diagnostic-db').html(info)
+
+        locationMap = {}
+        categoryMap = {}
+
+        // get all categories and all locations (just need the first one which already contains all locations and categories)
+        for(var field in currentDB[1]){
+            if(field == "date" || field == 'Tous') continue
+            locationMap[field] = true
+        }
+        for(var field in currentDB[1]['Tous']){
+            if(field == "total") continue
+            categoryMap[field] = true
+        }
+
+    }, function(){
+        console.error("problem ...")
+    })
+
+}
+
 
 function push_data(event){
 
@@ -93,32 +144,70 @@ function push_data(event){
 
 function merge_data(event){
 
-    // TODO fail case ...
-    github_get_content( dbPath, function( data ) {
-        console.log(data)
-
-        sha = data.sha
-        content = JSON.parse(b64_to_utf8(data.content))
-
-        for(var i=0 ; i<currentContent.length ; i++){
-            content.push(currentContent[i])
+    // complete old database with new locations and/or new categories
+    for(var i=1 ; i<currentDB.length ; i++){
+        var jsonDay = currentDB[i]
+        for(var location in locationMap){
+            if(jsonDay[location] === undefined){
+                jsonDay[location] = {"total": 0, "top-emplacement": ""}
+            }
+            for(var category in categoryMap){
+                if(jsonDay[location][category] === undefined){
+                    jsonDay[location][category] = 0
+                }
+            }
         }
+    }
 
-        // TODO recompute sum, ...
+    // TODO faire une vue différentiel avec avant/après pour vérifier les lieux et categories !!!! 
 
-        //content = {test: "légende"} // XXX test
-        
-        // // TODO update the max
-        // // TODO push
+    // append current month
+    for(var i=0 ; i<currentContent.length ; i++){
+        currentDB.push(currentContent[i])
+    }
+    
+    // update max (TODO separate in another function !)
+    currentDB[0] = {}
 
-        github_patch_file(dbPath, sha, content)
+    // update max for locations
+    var maxAllLocations = 0
+    for(location in locationMap){
+        var maxForLocation = 0
+        for(var i=1 ; i<currentDB.length ; i++){
+            var topCategory = currentDB[i][location]["top-emplacement"]
+            if(topCategory.trim() == "") continue
+            max = parseInt(currentDB[i][location][topCategory])
+            if(max > maxForLocation) maxForLocation = max
+        }
+        if(maxForLocation > maxAllLocations) maxAllLocations = maxForLocation
+        currentDB[0]["Max_" + location] = maxForLocation
+    }
+    currentDB[0]["Max"] = maxAllLocations // OK
 
-    }, function(){
-        console.error("problem ...")
-    })
+    // update max for categories
+    var maxAllCategories = 0
+    for(category in categoryMap){
+        var maxForCategory = 0
+        for(var i=1 ; i<currentDB.length ; i++){
+            max = parseInt(currentDB[i]['Tous'][category])
+            if(max > maxForCategory) maxForCategory = max
+        }
+        if(maxForCategory > maxAllCategories) maxAllCategories = maxForCategory
+        currentDB[0]["Max_" + category] = maxForCategory
+    }
+    currentDB[0]["Max_Tous"] = maxAllCategories
+
+    var maxAllTotal = 0
+    for(var i=1 ; i<currentDB.length ; i++){
+        max = parseInt(currentDB[i]['Tous']['total'])
+        if(max > maxAllTotal) maxAllTotal = max
+    }
+    currentDB[0]["Max_Total"] = maxAllTotal
 
 
 
+
+    github_patch_file(dbPath, sha, currentDB)
 }
 
 function github_get_content(filePath, success, error){
@@ -253,7 +342,11 @@ function parse_raw_data(data){
     var firstDay = 1
     var lastDay = new Date(year, month+1, 0).getDate()
 
-    diagnostic.push({status: true, message: "Donnée pour " + firstDate.toLocaleString("fr", { month: "long" }) + " " + year + " du " + firstDay + " au " + lastDay})
+    var monthString = firstDate.toLocaleString("fr", { month: "long" })
+
+    if(monthMap[month + "/" + year] !== undefined) throw new Error("Des données pour " + monthString + " " + year + " existe déjà.")
+
+    diagnostic.push({status: true, message: "Donnée pour " + monthString + " " + year + " du " + firstDay + " au " + lastDay})
 
     // parse header to build index
     var columnIndexByDay = []
@@ -274,10 +367,6 @@ function parse_raw_data(data){
     }
 
     // parse categories and location
-    var locationMap = {}
-    var categoryMap = {}
-
-
     for(var row=2 ; row < matrix.length ; row++){
         var locCell = matrix[row][0].trim()
         if(locCell.length > 0){
@@ -326,7 +415,7 @@ function parse_raw_data(data){
         if(location == null) throw new Error("ligne 1 / colonne 1 ne doit pas être vide ...")
 
         var category = matrix[row][1].trim().toLowerCase()
-        if(row == 1){
+        if(row == 1){ // TODO never happens
             if(category.length != 0) throw new Error("ligne 1 / colonne 2 doit être vide ...")
         }else{
             if(category.length == 0) throw new Error("ligne " + (row+1) + " / colonne 2 ne doit pas être vide ...")
@@ -357,7 +446,7 @@ function parse_raw_data(data){
         }
     }
 
-    // verify sums
+    // verify sums and compute top category
     var totalByDay = []
     for(var row=2 ; row < matrix.length ; row++){
         var location = matrix[row][0].trim()
@@ -377,6 +466,23 @@ function parse_raw_data(data){
         }
     }
 
+    // compute top categories
+    for(var i in json){
+        var jsonDay = json[i]
+        for(var location in locationMap){
+            var topCategory = ""
+            var topCount = 0
+            for(var category in categoryMap){
+                var count = jsonDay[location][category]
+                if(count > topCount){
+                    topCount = count
+                    topCategory = category
+                }
+            }
+            jsonDay[location]["top-emplacement"] = topCategory
+        }
+    }
+
     // verify total
     var totalBorrowsCSV = 0
     for(var day in columnIndexByDay){
@@ -393,13 +499,16 @@ function parse_raw_data(data){
     for(var i in json){
         var jsonDay = json[i]
         var jsonAll = {}
+        var totalDay = 0
         for(var category in categoryMap){
             jsonAll[category] = 0
             for(var location in locationMap){
                 jsonAll[category] += jsonDay[location][category]
             }
+            totalDay += jsonAll[category]
             totalBorrows += jsonAll[category]
         }
+        jsonAll['total'] = totalDay
         jsonDay['Tous'] = jsonAll
     }
     if(totalBorrows != totalBorrowsCSV) throw new Error("totaux non valide : attendu " + totalBorrows + ", trouvé " + totalBorrowsCSV)
