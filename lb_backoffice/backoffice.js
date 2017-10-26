@@ -11,6 +11,9 @@ var repositoryName = "CBN_2017"
 var repositoryBranch = "gh-pages"
 var dbPath = "data/db_06122017.json" // TODO no date in file name
 
+var registeredLocations = ["Bourg", "Haute Chaussée", "Charles-Gautier-Hermeland", "Bellevue", "Ludothèque Municipale", "Gao Xingjian - Sillon"]
+var registeredCategories = ["albums","arts","graphisme","bd adultes","bd jeunesse","cinema adultes","cinema jeunesse","cinema","danse","geographie","histoire","informatique","jeux d'assemblage","jeux d'exercices","livres sur les jeux","jeux a regles","jeux symboliques","jeux video","langues","litterature","loisirs creatifs","musique adultes","musique jeunesse","philosophie","presse","fonds pro","psychologie","romans adultes","romans jeunesse","religions","sciences","societe","sports et loisirs","vie pratique","theatre"]
+
 // Global context variables
 //
 var currentContent = null
@@ -19,10 +22,25 @@ var diagnostic = null
 var currentSHA = null
 var currentDB = null
 var monthMap = null
-var locationMap = null
-var categoryMap = null
-var locationMapOld = null
-var categoryMapOld = null
+
+
+// Code
+//
+
+function mapKeys(map){
+    var keys = []
+    for(var key in map) keys.push(key)
+    return keys
+}
+
+function arrayToMap(array){
+    var map = {}
+    for(var i=0 ; i<array.length ; i++) map[array[i]] = true
+    return map
+}
+
+var locationMap = arrayToMap(registeredLocations)
+var categoryMap = arrayToMap(registeredCategories)
 
 
 // utf8 base64 support from https://developer.mozilla.org/fr/docs/D%C3%A9coder_encoder_en_base64
@@ -67,7 +85,7 @@ function loadCurrentDB(){
 
 
     github_get_content( dbPath, function( data ) {
-        console.log(data)
+        
 
         sha = data.sha
         currentDB = JSON.parse(b64_to_utf8(data.content))
@@ -82,39 +100,10 @@ function loadCurrentDB(){
             monthMap[month + "/" + year] = new Date(year, month, 1)
         }
 
-        
-        locationMapOld = {}
-        categoryMapOld = {}
-        locationMap = {}
-        categoryMap = {}
-
-        // get all categories and all locations (just need the first one which already contains all locations and categories)
-        for(var field in currentDB[1]){
-            if(field == "date" || field == 'Tous') continue
-            locationMapOld[field] = locationMap[field] = true
-        }
-        for(var field in currentDB[1]['Tous']){
-            if(field == "total") continue
-            categoryMapOld[field] = categoryMap[field] = true
-        }
-
-
 
         var info = "<h3>Periodes :</h3><ul>"
         for(month in monthMap){
             info += "<li>" + monthMap[month].toLocaleString("fr", { month: "long" }) + " " + monthMap[month].getFullYear() + "</li>"
-        }
-        info += "</ul>"
-
-        info += "<h3>Lieux :</h3><ul>"
-        for(var location in locationMapOld){ // XXXXXXXXXXXXXXXXXXXXX location is interpreted as window.location !!!!!!!
-            info += "<li>" + location + "</li>"
-        }
-        info += "</ul>"
-
-        info += "<h3>Emplacements :</h3><ul>"
-        for(var category in categoryMapOld){
-            info += "<li>" + category + "</li>"
         }
         info += "</ul>"
 
@@ -162,24 +151,13 @@ function push_data(event){
 
 }
 
-function merge_data(event){
+function actionCancelImport(event){
+    $('#diagnostic').html("")
+    $('#debug').html("")
+    // TODO hide some panel and enable some buttons ... (restart step 2)
+}
 
-    // complete old database with new locations and/or new categories
-    for(var i=1 ; i<currentDB.length ; i++){
-        var jsonDay = currentDB[i]
-        for(var location in locationMap){
-            if(jsonDay[location] === undefined){
-                jsonDay[location] = {"total": 0, "top-emplacement": ""}
-            }
-            for(var category in categoryMap){
-                if(jsonDay[location][category] === undefined){
-                    jsonDay[location][category] = 0
-                }
-            }
-        }
-    }
-
-    // TODO faire une vue différentiel avec avant/après pour vérifier les lieux et categories !!!! 
+function actionCommit(event){
 
     // append current month
     for(var i=0 ; i<currentContent.length ; i++){
@@ -191,7 +169,7 @@ function merge_data(event){
 
     // update max for locations
     var maxAllLocations = 0
-    for(location in locationMap){
+    for(var location in locationMap){
         var maxForLocation = 0
         for(var i=1 ; i<currentDB.length ; i++){
             var topCategory = currentDB[i][location]["top-emplacement"]
@@ -298,31 +276,13 @@ $(function(){
         try{
             parse_raw_data(text)
         }catch(e){
-            diagnostic.push({status: false, message: e.message}) // TODO not sure
+            diagnostic.push({status: 'danger', message: e.message}) // TODO not sure
             console.error(e)
         }
 
         var msg = "<ul>"
-        for(var i in diagnostic) msg += '<li class="' + (diagnostic[i].status ? 'text-success' : 'text-danger') + '">' + diagnostic[i].message + "</li>"
+        for(var i in diagnostic) msg += '<li class="text-' + diagnostic[i].status + '">' + diagnostic[i].message + "</li>"
         msg += "</ul>"
-
-
-        var newLocations = []
-        for(var location in locationMap) if(locationMapOld[location] === undefined) newLocations.push(location)
-
-        var newCategories = []
-        for(var category in categoryMap) if(categoryMapOld[category] === undefined) newCategories.push(category)
-
-        if(newLocations.length > 0){
-            msg += "<h3>Nouveaux lieux : </h3><ul>"
-            for(var i=0 ; i<newLocations.length ; i++) msg += "<li>" + newLocations[i] + "</li>"
-            msg += "</ul>"
-        }
-        if(newCategories.length > 0){
-            msg += "<h3>Nouveaux emplacements : </h3><ul>"
-            for(var i=0 ; i<newCategories.length ; i++) msg += "<li>" + newCategories[i] + "</li>"
-            msg += "</ul>"
-        }
 
         $('#diagnostic').html(msg)
         
@@ -341,11 +301,7 @@ function csvDateToJsDate(str){
     return new Date(2000 + year, mon-1, day)
 }
 
-function mapKeys(map){
-    var keys = []
-    for(var key in map) keys.push(key)
-    return keys
-}
+
 
 function parse_raw_data(data){
 
@@ -373,7 +329,7 @@ function parse_raw_data(data){
 
     // parse column header (containing dates)
 
-    
+
 
     var firstDate = csvDateToJsDate(matrix[0][2])
     var month = firstDate.getMonth()
@@ -385,7 +341,7 @@ function parse_raw_data(data){
 
     if(monthMap[month + "/" + year] !== undefined) throw new Error("Des données pour " + monthString + " " + year + " existe déjà.")
 
-    diagnostic.push({status: true, message: "Donnée pour " + monthString + " " + year + " du " + firstDay + " au " + lastDay})
+    diagnostic.push({status: 'success', message: "Donnée pour " + monthString + " " + year + " du " + firstDay + " au " + lastDay})
 
     // parse header to build index
     var columnIndexByDay = []
@@ -405,29 +361,10 @@ function parse_raw_data(data){
         
     }
 
-    // parse categories and location
-    for(var row=2 ; row < matrix.length ; row++){
-        var locCell = matrix[row][0].trim()
-        if(locCell.length > 0){
-            locationMap[locCell] = true
-            continue
-        }
 
-        var category = matrix[row][1].trim().toLowerCase()
-        if(row == 1){
-            if(category.length != 0) throw new Error("ligne 1 / colonne 2 doit être vide")
-        }else{
-            if(category.length == 0) throw new Error("ligne " + (row+1) + " / colonne 2 ne doit pas être vide ...")
-            categoryMap[category] = true
-        }
-    }
-    var locationList = mapKeys(locationMap)
-    var categoryList = mapKeys(categoryMap)
+
     
-    diagnostic.push({status: true, message: "Lieux : " + locationList}) // TODO .length
-
-    diagnostic.push({status: true, message: "Emplacements : " + categoryList}) // TODO .length
-
+ 
     // prepare default data with empty placeholder
     json = []
     for(var day=firstDay ; day<=lastDay ; day++)
@@ -442,7 +379,8 @@ function parse_raw_data(data){
         json.push(jsonDay)
     }
 
-    
+    var unsupportedLocations = {}
+    var unsupportedCategories = {}
 
     // parse CSV data
     var location = null
@@ -453,12 +391,18 @@ function parse_raw_data(data){
 
         if(location == null) throw new Error("ligne 1 / colonne 1 ne doit pas être vide ...")
 
-        var category = matrix[row][1].trim().toLowerCase()
-        if(row == 1){ // TODO never happens
-            if(category.length != 0) throw new Error("ligne 1 / colonne 2 doit être vide ...")
-        }else{
-            if(category.length == 0) throw new Error("ligne " + (row+1) + " / colonne 2 ne doit pas être vide ...")
+        if(locationMap[location] === undefined){
+            unsupportedLocations[location] = true
+            continue
         }
+
+        var category = matrix[row][1].trim().toLowerCase()
+        if(category.length == 0) throw new Error("ligne " + (row+1) + " / colonne 2 ne doit pas être vide ...")
+        if(categoryMap[category] === undefined){
+            unsupportedCategories[category] = true
+            continue
+        }
+
 
         for(var day in columnIndexByDay){
 
@@ -471,6 +415,12 @@ function parse_raw_data(data){
         }
 
     }
+
+
+    diagnostic.push({status: 'warning', message: "Lieux ignorés : " + mapKeys(unsupportedLocations)}) 
+
+    diagnostic.push({status: 'warning', message: "Emplacements ignorés : " + mapKeys(unsupportedCategories)}) 
+
 
     // compute sum's
     for(var i in json){
@@ -485,25 +435,17 @@ function parse_raw_data(data){
         }
     }
 
-    // verify sums and compute top category
-    var totalByDay = []
-    for(var row=2 ; row < matrix.length ; row++){
-        var location = matrix[row][0].trim()
-
-        if(location.length > 0){
-            var category = matrix[row][1].trim().toLowerCase()
-            if(category != "total") throw new Error("ligne TOTAL attendu pour le lieux " + location)
-            for(var day in columnIndexByDay){
-                var col = columnIndexByDay[day]
-                if(col === null) continue
-                var cell = matrix[row][col]
-                var totalCSV = parseInt(cell)
-                var totalComputed = json[day - firstDay][location]['total']
-                if(totalCSV != totalComputed) throw new Error("total non valide pour le lieux " + location + " jour " + day + " : attendu " + totalComputed + ", trouvé " + totalCSV)
-                totalByDay[day] = (totalByDay[day]||0) + totalComputed
-            }
-        }
-    }
+    // compute top category
+    // var totalByDay = []
+    // for(var row=2 ; row < matrix.length ; row++){
+    //     var location = matrix[row][0].trim()
+    //     if(location.length > 0){
+    //         for(var day in columnIndexByDay){
+    //             var totalComputed = json[day - firstDay][location]['total']
+    //             totalByDay[day] = (totalByDay[day]||0) + totalComputed
+    //         }
+    //     }
+    // }
 
     // compute top categories
     for(var i in json){
@@ -520,17 +462,6 @@ function parse_raw_data(data){
             }
             jsonDay[location]["top-emplacement"] = topCategory
         }
-    }
-
-    // verify total
-    var totalBorrowsCSV = 0
-    for(var day in columnIndexByDay){
-        var col = columnIndexByDay[day]
-        if(col === null) continue
-        var totalComputed = totalByDay[day]
-        var totalCSV = parseInt(matrix[1][col])
-        if(totalCSV != totalComputed) throw new Error("total non valide pour le jour " + day + " : attendu " + totalComputed + ", trouvé " + totalCSV)
-        totalBorrowsCSV += totalComputed
     }
 
     // add sums by category for each days
@@ -550,8 +481,8 @@ function parse_raw_data(data){
         jsonAll['total'] = totalDay
         jsonDay['Tous'] = jsonAll
     }
-    if(totalBorrows != totalBorrowsCSV) throw new Error("totaux non valide : attendu " + totalBorrows + ", trouvé " + totalBorrowsCSV)
-    diagnostic.push({status: true, message: "Total des prêts : " + totalBorrows})
+    
+    diagnostic.push({status: 'success', message: "Total des prêts : " + totalBorrows})
 
     console.log(json)
 

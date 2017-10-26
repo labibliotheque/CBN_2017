@@ -97,15 +97,7 @@
 
             </div>
 
-             <div class="col-md-4">
-                
-                <button id="bt-push" onclick="push_data(event)">
-                    PUSH !!!
-                </button>
-                <button id="bt-merge" onclick="merge_data(event)">
-                    MERGE ALL !!!
-                </button>
-            </div>
+            
 
 
         </div>
@@ -126,14 +118,12 @@
 
                 <div id="diagnostic"></div>
                 
+                <button class="btn btn-danger" onclick="actionCommit(event)">Mettre à jour le site</button>
+                <button class="btn btn-default" onclick="actionCancelImport(event)">Annuler</button>
+
             </div>
 
-             <div class="col-md-4">
-                <h3>Differentiel</h3>
-
-                <div id="diagnostic-diff"></div>
-                
-            </div>
+            
         </div>    
    
     
