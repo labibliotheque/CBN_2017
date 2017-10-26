@@ -17,6 +17,7 @@ var dbPath = "data/db_06122017.json" // TODO no date in file name
 
 var currentContent = null
 var currentMonth = null
+var diagnostic = null
 
 // utf8 base64 support from https://developer.mozilla.org/fr/docs/D%C3%A9coder_encoder_en_base64
 function utf8_to_b64( str ) {
@@ -43,6 +44,9 @@ function ghConnect(event){
             // TODO gui success massage and display other GUI
             console.log(status)
             console.log(data)
+
+            // TODO need to load current DB to merge categories !
+
         },
         error: function(xhr, status, message){
             // TODO gui error message
@@ -96,10 +100,11 @@ function merge_data(event){
         sha = data.sha
         content = JSON.parse(b64_to_utf8(data.content))
 
-        //TODO add new json (without max) in original json
-        for(var i=1 ; i<currentContent.length ; i++){
+        for(var i=0 ; i<currentContent.length ; i++){
             content.push(currentContent[i])
         }
+
+        // TODO recompute sum, ...
 
         //content = {test: "légende"} // XXX test
         
@@ -180,14 +185,39 @@ $(function(){
         else if (event.originalEvent && event.originalEvent.clipboardData)
           text = event.originalEvent.clipboardData.getData("Text");
 
-        parse_raw_data(text)
+        diagnostic = []
+        try{
+            parse_raw_data(text)
+        }catch(e){
+            diagnostic.push({status: false, message: e.message}) // TODO not sure
+            console.error(e)
+        }
+
+        var msg = "<ul>"
+        for(var i in diagnostic) msg += '<li class="' + (diagnostic[i].status ? 'text-success' : 'text-danger') + '">' + diagnostic[i].message + "</li>"
+        msg += "</ul>"
+        $('#diagnostic').html(msg)
+        
     });
 
 
 });
 
 
+function csvDateToJsDate(str){
+    regexp_date = /.*(\d{2})\/(\d{2})\/(\d{2})/i
+    var elements = regexp_date.exec(str)
+    var day = parseInt(elements[1])
+    var mon = parseInt(elements[2])
+    var year = parseInt(elements[3])
+    return new Date(2000 + year, mon-1, day)
+}
 
+function mapKeys(map){
+    var keys = []
+    for(var key in map) keys.push(key)
+    return keys
+}
 
 function parse_raw_data(data){
 
@@ -208,48 +238,87 @@ function parse_raw_data(data){
     }
     r += "</table>"
 
-    $('#debug').replaceWith(r)
+    $('#debug').html(r)
 
 
     // scrap
 
-    // parse column header
+    // parse column header (containing dates)
 
-    jsonMax = {}
-    json = [jsonMax]
+    
 
-    regexp_date = /.*(\d{2})\/(\d{2})\/(\d{2})/i
+    var firstDate = csvDateToJsDate(matrix[0][2])
+    var month = firstDate.getMonth()
+    var year = firstDate.getFullYear()
+    var firstDay = 1
+    var lastDay = new Date(year, month+1, 0).getDate()
 
-    var dayMax = 0
+    diagnostic.push({status: true, message: "Donnée pour " + firstDate.toLocaleString("fr", { month: "long" }) + " " + year + " du " + firstDay + " au " + lastDay})
+
+    // parse header to build index
+    var columnIndexByDay = []
+    for(var i=firstDay ; i<=lastDay ; i++) columnIndexByDay[i] = null
 
     for(var col = 2 ; col < matrix[0].length ; col++){
 
-        var cell = matrix[0][col]
+        var date = csvDateToJsDate(matrix[0][col])
 
-        // convert from dd/mm/yy to mm/dd/yyyy
-        var elements = regexp_date.exec(cell)
+        if(date.getFullYear() != year || date.getMonth() != month) throw new Error("Le tableur ne doit contenir que des donnée pour un seul mois.")
 
-        var day = parseInt(elements[1])
-        var mon = parseInt(elements[2])
-        var year = parseInt(elements[3])
+        var day = date.getDate()
 
-        var jsonDate = mon + "/" + day + "/20" + year
+        if(day < firstDay || day > lastDay) throw new Error("Le tableur contient une date non valide : " + date)
 
-        console.log(elements)
-        console.log(jsonDate)
-
-        json.push({date: jsonDate})
-
-        dayMax = day > dayMax ? day : dayMax
+        columnIndexByDay[day] = col
+        
     }
 
+    // parse categories and location
+    var locationMap = {}
+    var categoryMap = {}
+
+
+    for(var row=2 ; row < matrix.length ; row++){
+        var locCell = matrix[row][0].trim()
+        if(locCell.length > 0){
+            locationMap[locCell] = true
+            continue
+        }
+
+        var category = matrix[row][1].trim().toLowerCase()
+        if(row == 1){
+            if(category.length != 0) throw new Error("ligne 1 / colonne 2 doit être vide")
+        }else{
+            if(category.length == 0) throw new Error("ligne " + (row+1) + " / colonne 2 ne doit pas être vide ...")
+            categoryMap[category] = true
+        }
+    }
+    var locationList = mapKeys(locationMap)
+    var categoryList = mapKeys(categoryMap)
+    
+    diagnostic.push({status: true, message: "Lieux : " + locationList}) // TODO .length
+
+    diagnostic.push({status: true, message: "Emplacements : " + categoryList}) // TODO .length
+
+    // prepare default data with empty placeholder
+    json = []
+    for(var day=firstDay ; day<=lastDay ; day++)
+    {
+        var jsonDay = {date: (month+1) + "/" + day + "/" + year}
+        for(var location in locationMap){
+            var jsonLocation = jsonDay[location] = {}
+            for(var category in categoryMap){
+                jsonLocation[category] = 0
+            }
+        }
+        json.push(jsonDay)
+    }
+
+    
+
+    // parse CSV data
     var location = null
-
-    // parse row header
-
-    // TODO fill missing days by zeros .... donc deja parser toutes les categories possibles
-
-    for(var row=1 ; row < matrix.length ; row++){
+    for(var row=2 ; row < matrix.length ; row++){
 
         var locCell = matrix[row][0].trim()
         if(locCell.length > 0) location = locCell
@@ -263,33 +332,78 @@ function parse_raw_data(data){
             if(category.length == 0) throw new Error("ligne " + (row+1) + " / colonne 2 ne doit pas être vide ...")
         }
 
-        // parse content ... 
+        for(var day in columnIndexByDay){
 
-        for(var col = 2 ; col < matrix[row].length ; col++){
+            var col = columnIndexByDay[day]
+            if(col === null) continue
 
             var cell = matrix[row][col]
 
-            var count = parseInt(cell)
-
-            var jsonDay = json[col-1]
-
-            var jsonLocation = jsonDay[location] || (jsonDay[location] = {})
-
-            jsonLocation[category] = count
-
-            // update max for current category
-            var maxLabel = "Max_" + category
-            var max = (jsonMax[maxLabel]||0)
-            jsonMax[maxLabel] = max < count ? count : max
-
-            // update global max
-            var maxLabel = "Max"
-            var max = (jsonMax[maxLabel]||0)
-            jsonMax[maxLabel] = max < count ? count : max
+            json[day - firstDay][location][category] = parseInt(cell)
         }
 
     }
 
+    // compute sum's
+    for(var i in json){
+        var jsonDay = json[i]
+        for(var location in locationMap){
+            var jsonLocation = jsonDay[location]
+            var locationTotal = 0
+            for(var category in categoryMap){
+                locationTotal += jsonLocation[category]
+            }
+            jsonLocation['total'] = locationTotal
+        }
+    }
+
+    // verify sums
+    var totalByDay = []
+    for(var row=2 ; row < matrix.length ; row++){
+        var location = matrix[row][0].trim()
+
+        if(location.length > 0){
+            var category = matrix[row][1].trim().toLowerCase()
+            if(category != "total") throw new Error("ligne TOTAL attendu pour le lieux " + location)
+            for(var day in columnIndexByDay){
+                var col = columnIndexByDay[day]
+                if(col === null) continue
+                var cell = matrix[row][col]
+                var totalCSV = parseInt(cell)
+                var totalComputed = json[day - firstDay][location]['total']
+                if(totalCSV != totalComputed) throw new Error("total non valide pour le lieux " + location + " jour " + day + " : attendu " + totalComputed + ", trouvé " + totalCSV)
+                totalByDay[day] = (totalByDay[day]||0) + totalComputed
+            }
+        }
+    }
+
+    // verify total
+    var totalBorrowsCSV = 0
+    for(var day in columnIndexByDay){
+        var col = columnIndexByDay[day]
+        if(col === null) continue
+        var totalComputed = totalByDay[day]
+        var totalCSV = parseInt(matrix[1][col])
+        if(totalCSV != totalComputed) throw new Error("total non valide pour le jour " + day + " : attendu " + totalComputed + ", trouvé " + totalCSV)
+        totalBorrowsCSV += totalComputed
+    }
+
+    // add sums by category for each days
+    var totalBorrows = 0
+    for(var i in json){
+        var jsonDay = json[i]
+        var jsonAll = {}
+        for(var category in categoryMap){
+            jsonAll[category] = 0
+            for(var location in locationMap){
+                jsonAll[category] += jsonDay[location][category]
+            }
+            totalBorrows += jsonAll[category]
+        }
+        jsonDay['Tous'] = jsonAll
+    }
+    if(totalBorrows != totalBorrowsCSV) throw new Error("totaux non valide : attendu " + totalBorrows + ", trouvé " + totalBorrowsCSV)
+    diagnostic.push({status: true, message: "Total des prêts : " + totalBorrows})
 
     console.log(json)
 
