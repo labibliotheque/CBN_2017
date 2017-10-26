@@ -19,8 +19,11 @@ var diagnostic = null
 var currentSHA = null
 var currentDB = null
 var monthMap = null
-var locationMap = {}
-var categoryMap = {}
+var locationMap = null
+var categoryMap = null
+var locationMapOld = null
+var categoryMapOld = null
+
 
 // utf8 base64 support from https://developer.mozilla.org/fr/docs/D%C3%A9coder_encoder_en_base64
 function utf8_to_b64( str ) {
@@ -79,26 +82,43 @@ function loadCurrentDB(){
             monthMap[month + "/" + year] = new Date(year, month, 1)
         }
 
-        var info = "Periodes : <br>"
-        for(month in monthMap){
-            info += monthMap[month].toLocaleString("fr", { month: "long" }) + " " + monthMap[month].getFullYear() + "<br>"
-        }
-
-
-        $('#diagnostic-db').html(info)
-
+        
+        locationMapOld = {}
+        categoryMapOld = {}
         locationMap = {}
         categoryMap = {}
 
         // get all categories and all locations (just need the first one which already contains all locations and categories)
         for(var field in currentDB[1]){
             if(field == "date" || field == 'Tous') continue
-            locationMap[field] = true
+            locationMapOld[field] = locationMap[field] = true
         }
         for(var field in currentDB[1]['Tous']){
             if(field == "total") continue
-            categoryMap[field] = true
+            categoryMapOld[field] = categoryMap[field] = true
         }
+
+
+
+        var info = "<h3>Periodes :</h3><ul>"
+        for(month in monthMap){
+            info += "<li>" + monthMap[month].toLocaleString("fr", { month: "long" }) + " " + monthMap[month].getFullYear() + "</li>"
+        }
+        info += "</ul>"
+
+        info += "<h3>Lieux :</h3><ul>"
+        for(var location in locationMapOld){ // XXXXXXXXXXXXXXXXXXXXX location is interpreted as window.location !!!!!!!
+            info += "<li>" + location + "</li>"
+        }
+        info += "</ul>"
+
+        info += "<h3>Emplacements :</h3><ul>"
+        for(var category in categoryMapOld){
+            info += "<li>" + category + "</li>"
+        }
+        info += "</ul>"
+
+        $('#diagnostic-db').html(info)
 
     }, function(){
         console.error("problem ...")
@@ -285,6 +305,25 @@ $(function(){
         var msg = "<ul>"
         for(var i in diagnostic) msg += '<li class="' + (diagnostic[i].status ? 'text-success' : 'text-danger') + '">' + diagnostic[i].message + "</li>"
         msg += "</ul>"
+
+
+        var newLocations = []
+        for(var location in locationMap) if(locationMapOld[location] === undefined) newLocations.push(location)
+
+        var newCategories = []
+        for(var category in categoryMap) if(categoryMapOld[category] === undefined) newCategories.push(category)
+
+        if(newLocations.length > 0){
+            msg += "<h3>Nouveaux lieux : </h3><ul>"
+            for(var i=0 ; i<newLocations.length ; i++) msg += "<li>" + newLocations[i] + "</li>"
+            msg += "</ul>"
+        }
+        if(newCategories.length > 0){
+            msg += "<h3>Nouveaux emplacements : </h3><ul>"
+            for(var i=0 ; i<newCategories.length ; i++) msg += "<li>" + newCategories[i] + "</li>"
+            msg += "</ul>"
+        }
+
         $('#diagnostic').html(msg)
         
     });
