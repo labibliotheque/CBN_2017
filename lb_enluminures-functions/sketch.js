@@ -61,7 +61,7 @@ var play = false
 var logos = [];
 
 function preload() {
-    db = loadJSON("../data/db_06122017.json");
+    db = loadJSON("../data/db.json");
     fontBold = loadFont("../assets/RenneBolArcTyp.otf")
     fontRegular = loadFont("../assets/RenneArcTyp.otf")
     imageLegend = loadImage("../assets/legende_enluminures.png")

@@ -5,7 +5,7 @@ var repositoryEndPoint = window.location.hostname == "localhost" || window.locat
 var repositoryOwner = "labibliotheque"
 var repositoryName = "CBN_2017"
 var repositoryBranch = "gh-pages"
-var dbPath = "data/db_06122017.json" // TODO no date in file name
+var dbPath = "data/db.json"
 
 var registeredLocations = ["Bourg", "Haute Chaussée", "Charles-Gautier-Hermeland", "Bellevue", "Ludothèque Municipale", "Gao Xingjian - Sillon"]
 var registeredCategories = ["albums","arts","graphisme","bd adultes","bd jeunesse","cinema adultes","cinema jeunesse","cinema","danse","geographie","histoire","informatique","jeux d'assemblage","jeux d'exercices","livres sur les jeux","jeux a regles","jeux symboliques","jeux video","langues","litterature","loisirs creatifs","musique adultes","musique jeunesse","philosophie","presse","fonds pro","psychologie","romans adultes","romans jeunesse","religions","sciences","societe","sports et loisirs","vie pratique","theatre"]
