@@ -5,9 +5,22 @@
 # $ ruby -I . local.rb
 # and open http://localhost:4567/lb_backoffice/index.html
 
+
+# CONFIG
+#
+# to simulate build flow, just create a file 'build_status' in the local root repository folder with the status
+# one of (see https://developer.github.com/v3/repos/pages) :
+# null, which means the site has yet to be built
+# queued, which means the build has been requested but not yet begun
+# building, which means the build is in progress
+# built, which means the site has been built
+# errored, which indicates an error occurred during the build
+
+
 require 'sinatra'
 require "base64"
 require "json"
+
 
 set :public_folder, '.'
 
@@ -59,4 +72,14 @@ put '/repos/:owner/:repo/contents/*' do |owner, repo, *remain|
 
     content_type :json
     { fake: "fake" }.to_json
+end
+
+get '/repos/:owner/:repo/pages/builds/latest' do |owner, repo|
+    
+    build_status = File.exists?('build_status') ? File.read('build_status').strip : 'built'
+
+    content_type :json, charset: 'utf-8'
+    {
+        status: build_status,
+    }.to_json
 end

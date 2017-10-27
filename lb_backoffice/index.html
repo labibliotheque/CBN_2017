@@ -19,128 +19,139 @@
 
         <h1>Backoffice</h1>
 
-        <div class="row">
+
+        <div id="section-login" class="panel panel-default">
+            <div class="panel-heading">Compte Github</div>
+            <div class="panel-body">
             
-            <div class="col-md-4">
-                <h3>Compte Github</h3>
                 <p class="text-muted">Vous devez disposer des droits en écriture sur le référentiel github.</p>
-                <label label-for="gh-login">Login</label>
-                <input id="gh-login">
-                <br>
-                <label label-for="gh-pwd">Mot de passe</label>
-                <input id="gh-pwd" type="password">
-                <br>
-                <button id="bt-connect" onclick="ghConnect(event)">Connexion</button>
-            </div>
+                <div class="form-inline">
+                    
+                    <label label-for="gh-login">Login</label>
+                    <input id="gh-login" class="form-control">
 
-            <div class="col-md-4">
+                    <label label-for="gh-pwd">Mot de passe</label>
+                    <input id="gh-pwd" type="password" class="form-control">
                 
-                <p>Veuillez coller le contenu de votre tableur dans la zone ci-dessous :</p>
+                    <button id="bt-connect" class="btn btn-success" onclick="ghConnect(event)">Connexion</button>
 
-                <textarea id="tainput"></textarea>
-
-                <div class="text-muted">
-                    Votre tableur doit respecter : 
-                    <ul>
-                        <li>des donnée pour un seul mois</li>
-                        <li></li>
-                    </ul>
-                    Votre tableur doit correspondre au format suivant : <br>
-                    <table class="table-bordered text-muted">
-                        <tr>
-                            <td>Lieu de prêt</td>
-                            <td>Emplacement</td>
-                            <td>Nb prêt<br>02/01/17</td>
-                            <td>Nb prêt<br>03/01/17</td>
-                            <td>Nb prêt<br>...etc</td>
-                        </tr>
-                        <tr>
-                            <td>Tous</td>
-                            <td></td>
-                            <td>nombre</td>
-                            <td>nombre</td>
-                            <td>nombre...</td>
-                        </tr>
-                        <tr>
-                            <td>Lieu 1</td>
-                            <td>TOTAL</td>
-                            <td>nombre</td>
-                            <td>nombre</td>
-                            <td>nombre...</td>
-                        </tr>
-                        <tr>
-                            <td>Lieu 1</td>
-                            <td>emplacement 1</td>
-                            <td>nombre</td>
-                            <td>nombre</td>
-                            <td>nombre...</td>
-                        </tr>
-                        <tr>
-                            <td>Lieu 1</td>
-                            <td>emplacement 2</td>
-                            <td>nombre</td>
-                            <td>nombre</td>
-                            <td>nombre...</td>
-                        </tr>
-                        <tr>
-                            <td>Lieu 2</td>
-                            <td>emplacement 1</td>
-                            <td>nombre</td>
-                            <td>nombre</td>
-                            <td>nombre...</td>
-                        </tr>
-                        <tr>
-                            <td colspan="5">...</td>
-                        </tr>
-                    </table>
+                    <br>
+                    <br>
+                    <div id="section-login-error" class="alert alert-danger hidden">
+                        Login ou mot de passe invalid, veuillez vérifier votre saisie.
+                    </div>
                 </div>
 
+                
             </div>
-
-            
-
-
         </div>
-    
 
+        <div id="section-import" class="hidden">
 
-        <div class="row">
-            
-            <div class="col-md-4">
-                <h3>Donnée actuels</h3>
-
-                <div id="diagnostic-db"></div>
+            <div class="panel panel-default">
+                <div class="panel-heading">Donnée actuels</div>
+                <div class="panel-body">
                 
+                    <p class="text-muted">Ci-dessous les information relatives aux données actuels du site.</p>
+                    <div id="diagnostic-db"></div>
+                </div>
             </div>
 
-            <div class="col-md-4">
-                <h3>Diagnostic</h3>
+            <div class="panel panel-default">
+                <div class="panel-heading">Import</div>
+                <div class="panel-body">
+                    
+                    <div class="col-md-7">
 
-                <div id="diagnostic"></div>
-                
-                <button class="btn btn-danger" onclick="actionCommit(event)">Mettre à jour le site</button>
-                <button class="btn btn-default" onclick="actionCancelImport(event)">Annuler</button>
+                    <div class="text-muted">
+                        Veuillez coller le contenu de votre tableur dans la zone ci-dessous :
+                        <ul>
+                            <li>Ouvrez votre tableur Excel</li>
+                            <li>Selectionnez toutes les cellules (CTRL+A)</li>
+                            <li>Copiez les cellules (CTRL+C)</li>
+                            <li>Coller les cellules dans le champs ci-dessous (CTRL+V)</li>
+                        </ul>
+                    </div>
+                    <input id="tainput">
 
+                    
+                    <div id="diagnostic"></div>
+                    
+                    
+                    <div id="section-commit" class="hidden">
+                        <button class="btn btn-danger" onclick="actionCommit(event)">Mettre à jour le site</button>
+                        <button class="btn btn-default" onclick="actionCancelImport(event)">Annuler</button>
+                    </div>
+
+                    <div id="section-status"></div>
+
+
+                </div>
+
+                <div class="col-md-5">
+                    <div class="text-muted">
+                        Votre tableur doit respecter : 
+                        <ul>
+                            <li>des donnée pour un seul mois</li>
+                            <li></li>
+                        </ul>
+                        Votre tableur doit correspondre au format suivant : <br>
+                        <table class="table-bordered text-muted">
+                            <tr>
+                                <td>Lieu de prêt</td>
+                                <td>Emplacement</td>
+                                <td>Nb prêt<br>02/01/17</td>
+                                <td>Nb prêt<br>03/01/17</td>
+                                <td>Nb prêt<br>...etc</td>
+                            </tr>
+                            <tr>
+                                <td>Tous</td>
+                                <td></td>
+                                <td>nombre</td>
+                                <td>nombre</td>
+                                <td>nombre...</td>
+                            </tr>
+                            <tr>
+                                <td>Lieu 1</td>
+                                <td>TOTAL</td>
+                                <td>nombre</td>
+                                <td>nombre</td>
+                                <td>nombre...</td>
+                            </tr>
+                            <tr>
+                                <td>Lieu 1</td>
+                                <td>emplacement 1</td>
+                                <td>nombre</td>
+                                <td>nombre</td>
+                                <td>nombre...</td>
+                            </tr>
+                            <tr>
+                                <td>Lieu 1</td>
+                                <td>emplacement 2</td>
+                                <td>nombre</td>
+                                <td>nombre</td>
+                                <td>nombre...</td>
+                            </tr>
+                            <tr>
+                                <td>Lieu 2</td>
+                                <td>emplacement 1</td>
+                                <td>nombre</td>
+                                <td>nombre</td>
+                                <td>nombre...</td>
+                            </tr>
+                            <tr>
+                                <td colspan="5">...</td>
+                            </tr>
+                        </table>
+                    </div>
+                </div>
             </div>
+        </div>
 
-            
-        </div>    
-   
-    
-
-
-        <div class="row">
-            
-            <div class="col-md-12">
-                <h3>Debug</h3>
-
-                <div id="debug"></div>
-                
-            </div>
-
-
-        </div>    
     </div>
+
+    <div id="debug"></div>
+
 </body>
 
 </html>
