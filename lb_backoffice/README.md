@@ -10,6 +10,14 @@
 note : if the first commit succeed but not the second one then first commit has to be revert manually before retry.
 
 
+# Development
+
+To test github access during development, run the simulator from root repository directory : 
+
+  $ ruby -I . local.rb
+
+note it require some gems (sinatra)
+
 # Test case
 
 * login
