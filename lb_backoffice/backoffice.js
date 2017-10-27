@@ -1,13 +1,4 @@
 
-// About the GITHUB workflow :
-// 1 - login is called to ensure credential OK
-// 2 - current DB is loaded to get the SHA
-// 3 - main JSON is patched with new data (first commit)
-// 4 - imported CSV is backup (second commit)
-// note : if the first commit succeed but not the second one then first commit has to be revert manually before retry.
-// 5 - build status is called several times until status is built.
-
-
 // Configuration variables
 //
 var repositoryEndPoint = window.location.hostname == "localhost" || window.location.hostname == "" ? "http://localhost:4567" : "https://api.github.com"
