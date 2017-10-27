@@ -1,15 +1,16 @@
 
-// TODO le faire en 2 phases :
-// 1 - importer un nouveau mois (ou supprimer ou remplacer)
-// 2 - générer le json final pour une periode donnée (reparsing des tableurs ou generation json ?) => storage du csv raw quand même pour futur récuération / si errors
+// About the GITHUB workflow :
+// 1 - login is called to ensure credential OK
+// 2 - current DB is loaded to get the SHA
+// 3 - main JSON is patched with new data (first commit)
+// 4 - imported CSV is backup (second commit)
+// note : if the first commit succeed but not the second one then first commit has to be revert manually before retry.
+// 5 - build status is called several times until status is built.
 
-// TODO push CSV and PATCH db (2 calls in a row) : TODO if exists then replace (case of error when patch file !)
-
-// TODO separate in js files : utils, config, github API, CSV import, ...etc just keep backoffice GUI code/flow here 
 
 // Configuration variables
 //
-var repositoryEndPoint = window.location.hostname == "localhost" ? "http://localhost:4567" : "http://localhost:6666" // TODO put github URL : https://api.github.com TODO handle file://
+var repositoryEndPoint = window.location.hostname == "localhost" || window.location.hostname == "" ? "http://localhost:4567" : "https://api.github.com"
 var repositoryOwner = "labibliotheque"
 var repositoryName = "CBN_2017"
 var repositoryBranch = "gh-pages"
@@ -29,16 +30,26 @@ var buildPollingTimeoutMS = 3000
 // whether to display imported CSV in the debug section (dev mode only)
 var debugCSV = false
 
+var commitMessageCSV = "Backoffice CSV backup"
+var commitMessageJSON = "Backoffice JSON DB update"
+
 
 // Global context variables
 //
 var currentContent = null
 var currentMonth = null
+var currentYear = null
 var diagnostic = null
 var currentSHA = null
 var currentDB = null
 var monthMap = null
+var currentCSV = null
+var lastMonth = null
+var lastYear = null
 
+
+// Debug
+console.log("Endpoint : " + repositoryEndPoint)
 
 // Code
 //
@@ -74,18 +85,17 @@ function hide(id){
     $(id).removeClass("hidden").addClass("hidden")
 }
 
+function makeAlert(type, message){
+    return '<div class="alert alert-' + type + '">' + message + '</div>'
+}
 
 function displayStatusMessage(type, message){
 
-    $('#section-status').html('<div class="alert alert-' + type + '">' + message + '</div>')
+    $('#section-status').html(makeAlert(type, message))
 
 }
 
 function ghConnect(event){
-
-    // TODO refactor this
-    var ghUsername = $('#gh-login').val()
-    var ghPassword = $('#gh-pwd').val()
 
     hide('#section-login-error')
     hide('#bt-connect')
@@ -93,24 +103,14 @@ function ghConnect(event){
     $.ajax({
         type: "GET",
         url: repositoryEndPoint + "/user",
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
-        },
+        beforeSend: github_before_send,
         success: function(data, status, xhr){
-            // TODO gui success massage and display other GUI
-            console.log(status)
-            console.log(data)
-
-            // TODO need to load current DB to merge categories : yes !
             loadCurrentDB()
-
             hide('#section-login')
             show('#section-import')
-
         },
         error: function(xhr, status, message){
-            // TODO gui error message
-            console.log(message)
+            console.error(message)
             show('#section-login-error')
             show('#bt-connect')
         }
@@ -132,10 +132,11 @@ function loadCurrentDB(){
     github_get_content( dbPath, function( data ) {
         
 
+        // TODO try/catch ?
+
         sha = data.sha
         currentDB = JSON.parse(b64_to_utf8(data.content))
 
-        // TODO display
         monthMap = {}
         for(var i=1 ; i<currentDB.length ; i++){
             var jsonDay = currentDB[i]
@@ -143,6 +144,8 @@ function loadCurrentDB(){
             var month = parseInt(array[0]) - 1
             var year = parseInt(array[2])
             monthMap[month + "/" + year] = new Date(year, month, 1)
+            lastMonth = month
+            lastYear = year
         }
 
 
@@ -161,34 +164,25 @@ function loadCurrentDB(){
         $('#diagnostic-db').html(info)
 
     }, function(xhr, status, message){
-        // TODO GUI
-        console.error(message)
+        $('#diagnostic-db').html(makeAlert('danger', globalErrorMessage))
     })
 
 }
 
 
-function push_data(event){
+function push_data(){
 
-    var ghUsername = $('#gh-login').val()
-    var ghPassword = $('#gh-pwd').val()
+    var yy = ('' + currentYear).substr(-2)
+    var mm = ('0' + currentMonth).substr(-2)
 
-    var yy = "17"
-    var mm = "11"
+    var path = "data/CBN_pretsjour_bibempl_" + yy + mm + ".csv"    
 
-    var path = "data/CBN_pretsjour_bibempl_" + yy + mm + ".json"
-
-    var content = {
-        field1: 45,
-        field2: "toto"
-    }
-
-    content = currentContent
+    var csvString = $.csv.fromArrays(currentCSV)
 
     var data = {
         branch: repositoryBranch,
-        message: "the commit message",
-        content: btoa(JSON.stringify(content, null, "  "))
+        message: commitMessageCSV,
+        content: utf8_to_b64(csvString)
     }
 
     $.ajax({
@@ -196,8 +190,13 @@ function push_data(event){
         url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + path,
         contentType: "application/json",
         data: JSON.stringify(data),
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
+        beforeSend: github_before_send,
+        success: function(data, status, xhr){
+            github_check_build()
+        },
+        error: function(xhr, status, message){
+            console.error(message)
+            displayStatusMessage("danger", globalErrorMessage)
         }
     });
 
@@ -265,29 +264,27 @@ function actionCommit(event){
 
 function github_get_content(filePath, success, error){
 
-    var ghUsername = $('#gh-login').val()
-    var ghPassword = $('#gh-pwd').val()
-
     $.ajax({
         type: "GET",
         url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + filePath + "?ref=" + repositoryBranch,
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
-        },
+        beforeSend: github_before_send,
         success: success,
         error: error
     });
 
 }
 
-function github_patch_file(filePath, sha, newContent){
-
+function github_before_send(xhr){
     var ghUsername = $('#gh-login').val()
     var ghPassword = $('#gh-pwd').val()
+    xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
+}
+
+function github_patch_file(filePath, sha, newContent){
 
     var data = {
         branch: repositoryBranch,
-        message: "the commit message",
+        message: commitMessageJSON,
         sha: sha,
         content: utf8_to_b64(JSON.stringify(newContent, null, "  "))
     }
@@ -297,15 +294,12 @@ function github_patch_file(filePath, sha, newContent){
         url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + filePath,
         contentType: "application/json",
         data: JSON.stringify(data, null, "  "),
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
-        },
+        beforeSend: github_before_send,
         success: function(){
-            github_check_build()
-            console.log("ok")
+            push_data()
         },
         error: function(xhr, status, message){
-            // TODO display error ...
+            displayStatusMessage("danger", globalErrorMessage)
             console.error(message)
         }
     });
@@ -318,17 +312,12 @@ function buildMessage(status){
 
 function github_check_build(){
 
-    var ghUsername = $('#gh-login').val()
-    var ghPassword = $('#gh-pwd').val()
-
     displayStatusMessage("warning", buildMessage('started'))
 
     $.ajax({
         type: "GET",
         url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/pages/builds/latest",
-        beforeSend: function (xhr) {
-            xhr.setRequestHeader ("Authorization", "Basic " + btoa(ghUsername + ":" + ghPassword));
-        },
+        beforeSend: github_before_send,
         success: function(data, status, xhr){
 
             switch(data.status){
@@ -393,17 +382,12 @@ $(function(){
             show('#section-commit')
 
             if(statusMap['warning'] !== undefined){
-                var m = "Des anomalies ont été détectés dans vos donnée à importer. Veuillez prendre connaissance des points d'attention ci-dessous avant d'enregistrer ou ré-importez vos données une fois corrigées."
-                msg += '<div class="alert alert-warning">' + m + '</div>' // TODO faire un util pour les alertes ...
+                msg += makeAlert('warning', "Des anomalies ont été détectés dans vos donnée à importer. Veuillez prendre connaissance des points d'attention ci-dessous avant d'enregistrer ou ré-importez vos données une fois corrigées.")
             }else{
-
-                var m = "Les données sont valide. Vous pouvez enregistrer."
-                msg += '<div class="alert alert-success">' + m + '</div>' // TODO faire un util pour les alertes ...
-               
+                msg += makeAlert('success', "Les données sont valide. Vous pouvez enregistrer.")
             }
-
         }else{
-            msg += '<div class="alert alert-danger">Les donnée sont invalides et ne peuvent être importés : </div>'
+            msg += makeAlert('danger',  "Les donnée sont invalides et ne peuvent être importés")
         }
 
         
@@ -441,8 +425,7 @@ CSVImportError.prototype = new Error;
 
 function parse_raw_data(data){
 
-    var matrix = $.csv.toArrays(data, {separator: "\t"});
-    console.log(matrix)
+    var matrix = currentCSV = $.csv.toArrays(data, {separator: "\t"});
 
     if(debugCSV){
         var r = "<table>"
@@ -474,11 +457,28 @@ function parse_raw_data(data){
     var firstDay = 1
     var lastDay = new Date(year, month+1, 0).getDate()
 
-    var monthString = firstDate.toLocaleString("fr", { month: "long" })
+    currentMonth = month+1
+    currentYear = year
 
-    if(monthMap[month + "/" + year] !== undefined) throw new CSVImportError("Des données pour " + monthString + " " + year + " existe déjà.")
+    var currentPeriodeString = firstDate.toLocaleString("fr", { month: "long" }) + " " + year
 
-    diagnostic.push({status: 'success', message: "Donnée pour " + monthString + " " + year + " du " + firstDay + " au " + lastDay})
+    // check existing month
+    if(monthMap[month + "/" + year] !== undefined) throw new CSVImportError("Des données pour " + currentPeriodeString + " existe déjà.")
+
+    // check consecutive month
+    if(lastMonth !== null && lastYear !== null){
+        var nextDate = new Date(lastYear, lastMonth + 1, 1)
+        var expectedYear = nextDate.getFullYear()
+        var expectedMonth = nextDate.getMonth()
+        if(expectedYear !== year || expectedMonth !== month){
+            var expectedPeriodeString = nextDate.toLocaleString("fr", { month: "long" }) + " " + expectedYear
+           
+            throw new CSVImportError("Des données pour " + expectedPeriodeString + " sont attendu, veuillez importer " + expectedPeriodeString + " avant " + currentPeriodeString)
+        }
+    }
+
+
+    diagnostic.push({status: 'success', message: "Donnée pour " + currentPeriodeString + " du " + firstDay + " au " + lastDay})
 
     // parse header to build index
     var columnIndexByDay = []
@@ -575,18 +575,6 @@ function parse_raw_data(data){
         }
     }
 
-    // compute top category
-    // var totalByDay = []
-    // for(var row=2 ; row < matrix.length ; row++){
-    //     var location = matrix[row][0].trim()
-    //     if(location.length > 0){
-    //         for(var day in columnIndexByDay){
-    //             var totalComputed = json[day - firstDay][location]['total']
-    //             totalByDay[day] = (totalByDay[day]||0) + totalComputed
-    //         }
-    //     }
-    // }
-
     // compute top categories
     for(var i in json){
         var jsonDay = json[i]
@@ -624,11 +612,7 @@ function parse_raw_data(data){
     
     diagnostic.push({status: 'success', message: "Total des prêts : " + totalBorrows})
 
-    console.log(json)
-
     jsonString = JSON.stringify(json, null, "    ")
 
     currentContent = json
-
-    console.log(jsonString)
 }
