@@ -13,7 +13,7 @@ var registeredCategories = ["albums","arts","graphisme","bd adultes","bd jeuness
 var globalErrorMessage = "Une erreur est survenue, veuillez contacter votre support."
 
 // link when update is completed with success
-var completeRedirectURL = "../lb_geopacking/index.html"
+var completeRedirectURL = "../lb_etoiles_quotidiennes/index.html"
 
 // polling timeout to check github pages build status (avoid low values)
 var buildPollingTimeoutMS = 3000
