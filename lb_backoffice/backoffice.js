@@ -242,8 +242,10 @@ function actionCommit(event){
 
     var maxAllTotal = 0
     for(var i=1 ; i<currentDB.length ; i++){
-        max = parseInt(currentDB[i]['Tous']['total'])
-        if(max > maxAllTotal) maxAllTotal = max
+        for(var location in locationMap){
+            max = parseInt(currentDB[i][location]['total'])
+            if(max > maxAllTotal) maxAllTotal = max
+        }
     }
     currentDB[0]["Max_Total"] = maxAllTotal
 
