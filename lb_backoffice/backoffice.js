@@ -139,7 +139,7 @@ function loadCurrentDB(){
             lastYear = year
         }
 
-
+        var expectedDateStr = ""
         var info = ""
         if(currentDB.length > 0){
             info += "<h3>Periodes :</h3><ul>"
@@ -148,9 +148,16 @@ function loadCurrentDB(){
                 info += "<li>" + monthMap[month].toLocaleString("fr", { month: "long" }) + " " + monthMap[month].getFullYear() + "</li>"
             }
             info += "</ul>"
+
+            var expectedDate = new Date(lastYear, lastMonth+1, 1)
+            expectedDateStr = expectedDate.toLocaleString("fr", { month: "long" }) + " " + expectedDate.getFullYear()
         }else{
             info += "le site ne dispose pas encore de données"
         }
+
+
+
+        $('#expexted-periode').html(expectedDateStr)
 
         $('#diagnostic-db').html(info)
 
