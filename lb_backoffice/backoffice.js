@@ -211,6 +211,8 @@ function actionCommit(event){
     hide('#section-commit')
     hide('#tainput')
 
+    displayStatusMessage("warning", "Enregistrement en cours, veuillez patienter...")
+
     // append current month
     for(var i=0 ; i<currentContent.length ; i++){
         currentDB.push(currentContent[i])
