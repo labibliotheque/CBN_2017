@@ -16,7 +16,9 @@ To test github access during development, run the simulator from root repository
 
   $ ruby -I . local.rb
 
-note it require some gems (sinatra)
+test credentials : admin/1234
+
+note : it require some gems (sinatra)
 
 # Test case
 
