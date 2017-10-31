@@ -155,6 +155,13 @@ function loadCurrentDB(){
             info += "le site ne dispose pas encore de données"
         }
 
+        var allLocationsStr = ""
+        for(var i=0 ; i<registeredLocations.length ; i++) allLocationsStr += '<li>' + registeredLocations[i] + '</li>'
+        $('#supported-locations').html(allLocationsStr)
+
+        var allCategoriesStr = ""
+        for(var i=0 ; i<registeredCategories.length ; i++) allCategoriesStr += (i > 0 ? ', ' : '') + registeredCategories[i]
+        $('#supported-categories').html(allCategoriesStr)
 
 
         $('#expexted-periode').html(expectedDateStr)
