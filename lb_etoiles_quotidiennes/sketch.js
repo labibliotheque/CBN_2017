@@ -31,6 +31,7 @@ function preload() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
+    pixelDensity(1)
     background(0);
     //frameRate(1)
     textAlign(CENTER, CENTER);

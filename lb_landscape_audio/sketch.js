@@ -1,3 +1,6 @@
+// pauser l'audio quand on change de fenetre
+// regarder ce qu'il se passe quand on entre une date non valide
+
 // passer à un synthétiseur polyphonique ou soundfont ?
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
@@ -69,6 +72,7 @@ function preload() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
+    pixelDensity(1)
     background(0);
     colorMode(HSB, 360, 100, 100);
     //frameRate(1)

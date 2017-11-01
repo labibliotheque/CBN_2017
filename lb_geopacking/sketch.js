@@ -68,6 +68,7 @@ function preload() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight);
+    pixelDensity(1)
     pg = createGraphics(windowWidth, windowHeight);
     pg.colorMode(HSB, 360, 100, 100, 100)
     colorMode(HSB, 360, 100, 100, 100)
