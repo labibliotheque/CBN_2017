@@ -152,7 +152,7 @@ function loadCurrentDB(){
             var expectedDate = new Date(lastYear, lastMonth+1, 1)
             expectedDateStr = expectedDate.toLocaleString("fr", { month: "long" }) + " " + expectedDate.getFullYear()
         }else{
-            info += "le site ne dispose pas encore de données"
+            info += "le site ne dispose pas encore de donnée"
         }
 
         var allLocationsStr = ""
@@ -316,7 +316,7 @@ function github_patch_file(filePath, sha, newContent){
 }
 
 function buildMessage(status){
-    return "Les donnée ont bien été enregistrée, le site est en cours de déploiement, veuillez patienter... (status: " + status + ")"
+    return "Les données ont bien été enregistrées, le site est en cours de déploiement, veuillez patienter... (status: " + status + ")"
 }
 
 function github_check_build(){
@@ -342,7 +342,7 @@ function github_check_build(){
                 break;
             case 'built':
                 var link = '<a href="' + completeRedirectURL + '">vérifier en accédant au site</a>'
-                displayStatusMessage("success", "Les donnée ont bien été enregistrée, le site est bien déployé, vous pouvez " + link + " ou fermer cette page.")
+                displayStatusMessage("success", "Les données ont bien été enregistrées, le site est bien déployé, vous pouvez " + link + " ou fermer cette page.")
                 break;
             }
             
@@ -391,12 +391,12 @@ $(function(){
             show('#section-commit')
 
             if(statusMap['warning'] !== undefined){
-                msg += makeAlert('warning', "Des anomalies ont été détectés dans vos donnée à importer. Veuillez prendre connaissance des points d'attention ci-dessous avant d'enregistrer ou ré-importez vos données une fois corrigées.")
+                msg += makeAlert('warning', "Des anomalies ont été détectées dans vos données à importer. Veuillez prendre connaissance des points d'attention ci-dessous avant d'enregistrer ou ré-importez vos données une fois corrigées.")
             }else{
-                msg += makeAlert('success', "Les données sont valide. Vous pouvez enregistrer.")
+                msg += makeAlert('success', "Les données sont valides. Vous pouvez enregistrer.")
             }
         }else{
-            msg += makeAlert('danger',  "Les donnée sont invalides et ne peuvent être importés")
+            msg += makeAlert('danger',  "Les données sont invalides et ne peuvent être importées")
         }
 
         
@@ -472,7 +472,7 @@ function parse_raw_data(data){
     var currentPeriodeString = firstDate.toLocaleString("fr", { month: "long" }) + " " + year
 
     // check existing month
-    if(monthMap[month + "/" + year] !== undefined) throw new CSVImportError("Des données pour " + currentPeriodeString + " existe déjà.")
+    if(monthMap[month + "/" + year] !== undefined) throw new CSVImportError("Des données pour " + currentPeriodeString + " existent déjà.")
 
     // check consecutive month
     if(lastMonth !== null && lastYear !== null){
@@ -482,12 +482,12 @@ function parse_raw_data(data){
         if(expectedYear !== year || expectedMonth !== month){
             var expectedPeriodeString = nextDate.toLocaleString("fr", { month: "long" }) + " " + expectedYear
            
-            throw new CSVImportError("Des données pour " + expectedPeriodeString + " sont attendu, veuillez importer " + expectedPeriodeString + " avant " + currentPeriodeString)
+            throw new CSVImportError("Des données pour " + expectedPeriodeString + " sont attendues, veuillez importer " + expectedPeriodeString + " avant " + currentPeriodeString)
         }
     }
 
 
-    diagnostic.push({status: 'success', message: "Donnée pour " + currentPeriodeString + " du " + firstDay + " au " + lastDay})
+    diagnostic.push({status: 'success', message: "Données pour " + currentPeriodeString + " du " + firstDay + " au " + lastDay})
 
     // parse header to build index
     var columnIndexByDay = []
@@ -497,7 +497,7 @@ function parse_raw_data(data){
 
         var date = csvDateToJsDate(matrix[0][col])
 
-        if(date.getFullYear() != year || date.getMonth() != month) throw new CSVImportError("Le tableur ne doit contenir que des donnée pour un seul mois.")
+        if(date.getFullYear() != year || date.getMonth() != month) throw new CSVImportError("Le tableur ne doit contenir que des données pour un seul mois.")
 
         var day = date.getDate()
 
