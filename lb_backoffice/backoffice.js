@@ -274,14 +274,45 @@ function actionCommit(event){
 
 function github_get_content(filePath, success, error){
 
+    // due to github API limit of 1 MB on file get content, we make 2 calls :
+    // - a first one to get the parent folder (in order to find the requested file SHA)
+    // - and second one to get the content (based on the SHA)
+
+    var pathElements = filePath.split("/")
+    var fileName = pathElements.pop()
+    var parentPath = pathElements.join("/")
+
     $.ajax({
         type: "GET",
-        url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + filePath + "?ref=" + repositoryBranch,
+        url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/contents/" + parentPath + "?ref=" + repositoryBranch,
+        beforeSend: github_before_send,
+        success: function(data){
+            var sha = null
+            for(var i in data){
+                if(data[i].path == filePath){
+                    sha = data[i].sha
+                    break
+                }
+            }
+            if(sha == null){
+                error()
+            }else{
+                github_get_blob(sha, success, error)
+            }
+        },
+        error: error
+    });
+
+}
+
+function github_get_blob(sha, success, error){
+    $.ajax({
+        type: "GET",
+        url: repositoryEndPoint + "/repos/" + repositoryOwner + "/" + repositoryName + "/git/blobs/" + sha,
         beforeSend: github_before_send,
         success: success,
         error: error
     });
-
 }
 
 function github_before_send(xhr){

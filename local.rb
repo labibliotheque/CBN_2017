@@ -49,7 +49,28 @@ end
 get '/repos/:owner/:repo/contents/*' do |owner, repo, *remain|
     path = params['splat'].first
     halt 404 unless File.exists?(path)
-    halt 500 if File.size(path) > 1024*1024
+    if File.directory?(path)
+        content_type :json, charset: 'utf-8'
+        Dir.glob(path + '/*').map{|file|
+            {
+                path: file,
+                sha: Base64.encode64(file)
+            }
+        }.to_json
+    else
+        halt 500 if File.size(path) > 1024*1024
+        content_type :json, charset: 'utf-8'
+        {
+            sha: 'fake SHA code for this blob',
+            content: Base64.encode64(File.read(path))
+        }.to_json
+    end
+end
+
+get '/repos/:owner/:repo/git/blobs/:sha' do |owner, repo, sha|
+    path = Base64.decode64(sha)
+    halt 404 unless File.exists?(path)
+    halt 500 if File.size(path) > 100*1024*1024
     content_type :json, charset: 'utf-8'
     {
         sha: 'fake SHA code for this blob',
