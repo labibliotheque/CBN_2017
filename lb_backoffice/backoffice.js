@@ -98,7 +98,6 @@ function ghConnect(event){
         success: function(data, status, xhr){
             loadCurrentDB()
             hide('#section-login')
-            show('#section-import')
         },
         error: function(xhr, status, message){
             console.error(message)
@@ -168,8 +167,10 @@ function loadCurrentDB(){
 
         $('#diagnostic-db').html(info)
 
+        show('#section-import')
+
     }, function(xhr, status, message){
-        $('#diagnostic-db').html(makeAlert('danger', globalErrorMessage))
+        $('#error-db').html(makeAlert('danger', globalErrorMessage))
     })
 
 }

@@ -49,6 +49,7 @@ end
 get '/repos/:owner/:repo/contents/*' do |owner, repo, *remain|
     path = params['splat'].first
     halt 404 unless File.exists?(path)
+    halt 500 if File.size(path) > 1024*1024
     content_type :json, charset: 'utf-8'
     {
         sha: 'fake SHA code for this blob',
