@@ -10,19 +10,6 @@ p{
 
 
 
-button{
-    -moz-appearance: none;
-    color: black;
-	font-family : 'Homemade Apple', cursive;
-    background-color: white;
-    outline : 0px;
-    border : 0px;
-    outline-color: black;
-	font-size:20px;
-	padding-bottom: 00px;
-    border-radius: 10px;
-     box-shadow: 5px 5px 5px #888888;
-}
 
 
 input[type=range] {

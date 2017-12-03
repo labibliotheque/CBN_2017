@@ -1,4 +1,6 @@
-/*
+    /*
+
+    ça rame un peu changer scribble ou le nombre de points pour la définition des formes
 
 
 */
@@ -57,8 +59,9 @@ var pindex = 1 // previous index
 var index = 1
 var fontBold
 var fontRegular
-var play = false
+var play = true
 var logos = [];
+var incr = 0;
 
 function preload() {
     db = loadJSON("../data/db.json");
@@ -84,10 +87,11 @@ function setup() {
     spacing = 3
     padding = cWidth + spacing;
     // gui
-    button = createButton('Play');
+    button = createSpan('<i class="fa fa-pause fa-2x" aria-hidden="true" ></i>');
     button.mousePressed(makeplay);
-    button.position(25, windowHeight - 75);
-    button.size(75, 50);
+    button.position(windowWidth-53 , 75);
+   // button.size(500, 500);
+
     nDays = Object.keys(db).length - 1;
     slider = createSlider(1, nDays, 1, 1);
     slider.position(windowWidth / 4, windowHeight - 75);
@@ -97,6 +101,7 @@ function setup() {
 
 function draw() {
     background(255)
+    incr+=0.5
 
     pindex = index;
     index = int(slider.value());
@@ -105,12 +110,12 @@ function draw() {
     if (index != pindex) updateLogos();
 
     // auto play
-    if (frameCount % 120 == 0 && play) {
+    if (incr % 90 == 0 && play) {
         slider.elt.valueAsNumber += 1;
     }
     // do a small animation when in play mode
     if (play) {
-        var val = abs(pow(sin(map(frameCount % 120, 0, 120, PI / 2, PI)), 6)) * 10;
+        var val = abs(pow(sin(map(incr % 90, 0, 90, PI / 2, PI)), 6)) * 10;
         scribble.bowing = val / 5;
         scribble.roughness = val;
     }
@@ -156,11 +161,12 @@ function draw() {
 function makeplay() {
     play = !play
     if (!play) {
-        button.elt.innerHTML = "Play";
+        button.elt.innerHTML = '<i class="fa fa-play fa-2x" aria-hidden="true"></i>';
     }
     else {
-        button.elt.innerHTML = "Pause";
+        button.elt.innerHTML = '<i class="fa fa-pause fa-2x" aria-hidden="true"></i>';
     }
+    console.log(play)
 }
 
 function windowResized() {
@@ -168,7 +174,7 @@ function windowResized() {
     slider.size(windowWidth / 2, 50);
     slider.position(windowWidth / 4, windowHeight - 75);
 
-    button.position(25, windowHeight - 75);
+    button.position(windowWidth-60 , 75);
 }
 
 function updateLogos() {
@@ -206,7 +212,7 @@ function Title() {
         for (var i = 0; i < lieux.length; i++) {
             total += int(db[index][lieux[i]].total)
         }
-        this.newL = map(total, 0, db[0]["Max_Total"], 25, 500)
+        this.newL = map(total, 0, db[0]["Max_Total"], 10, windowWidth/4)
     }
     this.draw = function () {
         push()
@@ -368,8 +374,7 @@ function Legend() {
             text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 38, 106)
             drawArrow(40, 100, -HALF_PI, 20)
             textAlign(LEFT, BOTTOM)
-            text("Cliquez ici pour parcourir les statistiques journalières séquentiellement", 50, windowHeight - 140)
-            drawArrow(54, windowHeight - 136, HALF_PI, 50)
+
             var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
             text("Déplacez ce curseur pour changer la date manuellement", xoffset, windowHeight - 120)
             drawArrow(xoffset + 4, windowHeight - 116, HALF_PI, 36), textAlign(CENTER, CENTER)
@@ -379,18 +384,18 @@ function Legend() {
             image(imageLegend, width / 2, height / 2)
         }
         push()
-        translate(windowWidth - 25, 25);
+        translate(windowWidth - 40, 40);
         fill(180)
         noStroke()
-        ellipse(0, 0, 25, 25)
+        ellipse(0, 0, 40, 40)
         textAlign(CENTER, CENTER);
         fill(0)
-        textSize(20)
+        textSize(28)
         text("?", 0, 0)
         pop()
     }
     this.isOver = function (xpos, ypos) {
-        if (dist(xpos, ypos, windowWidth - 25, 25) < 25) this.over = true;
+        if (dist(xpos, ypos, windowWidth - 40, 40) < 40) this.over = true;
         else this.over = false;
     }
 }
