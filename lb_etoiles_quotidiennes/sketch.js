@@ -1,7 +1,4 @@
-// on peut optimiser en rendant la légende dans une texture et l'afficher, il faut recalculer l'image au resize par contre.
-// remettre la rotation
-// ajouter un titre
-// ajouter des explications simples
+
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 var colorNames = ["bleu", "orange", "rouge", "vert", "jaune", "violet", "blanc"];
@@ -16,7 +13,7 @@ var emplacements = [
 var db
 var index = 1;
 var pindex = 1;
-var play = false
+var play = true
 var colors
 var fontBold
 var fontRegular
@@ -54,10 +51,10 @@ function setup() {
     })
     pg = createGraphics(windowWidth, windowHeight);
     // gui
-    button = createButton('Play');
+     button = createSpan('<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true" ></i>');
     button.mousePressed(makeplay);
-    button.position(25, windowHeight - 75);
-    button.size(75, 50);
+    button.position(windowWidth-53, 75);
+    //button.size(75, 50);
     nDays = Object.keys(db).length - 1;
     slider = createSlider(1, nDays, 1, 1);
     slider.position(windowWidth / 4, windowHeight - 75);
@@ -73,6 +70,7 @@ function draw() {
         // superposition d'étoiles
     push()
     translate(width / 4, height / 2)
+
     for (var i = 0; i < stars.length; i++) {
         noFill();
         stroke(colors[colorNames[i]])
@@ -138,10 +136,10 @@ function draw() {
 function makeplay() {
     play = !play
     if (!play) {
-        button.elt.innerHTML = "Play";
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-play fa-2x" aria-hidden="true"></i>';
     }
     else {
-        button.elt.innerHTML = "Pause";
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true"></i>';
     }
 }
 
@@ -286,7 +284,7 @@ function Title() {
         for (var i = 0; i < lieux.length; i++) {
             total += int(db[index][lieux[i]].total)
         }
-        this.newL = map(total, 0, db[0]["Max_Total"], 25, 500)
+        this.newL = map(total, 0, db[0]["Max_Total"], 10, windowWidth/4)
     }
     this.draw = function () {
         push()
@@ -304,7 +302,7 @@ function Title() {
             // draw A
         textAlign(LEFT, TOP);
         text(this.character, this.l + this.spacing, 0)
-        text(this.name + " : Statistiques ", this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
+        text(this.name , this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
         pop();
     }
 }
@@ -315,31 +313,30 @@ function Legend() {
     this.draw = function () {
         if (this.over) {
             noStroke()
-            fill(0,100)
+            fill(0,180)
             rect(0, 0, windowWidth, windowHeight)
             textSize(16);
             fill(255)
             textAlign(LEFT, TOP)
             text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 38, 106)
             drawArrow(40, 100, -HALF_PI, 20)
-            textAlign(LEFT, BOTTOM)
-            text("Cliquez ici pour parcourir les statistiques journalières séquentiellement", 50, windowHeight - 140)
-            drawArrow(54, windowHeight - 136, HALF_PI, 50)
+
             var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
-            text("Déplacez ce curseur pour changer la date manuellement", xoffset, windowHeight - 120)
+            text("Déplacez ce curseur pour changer la date manuellement", xoffset, windowHeight - 135)
             drawArrow(xoffset + 4, windowHeight - 116, HALF_PI, 36), textAlign(CENTER, CENTER)
             textSize(18)
             text("Passer vôtre souris au dessus des arrêtes de l'étoile pour obtenir des données par type d'ouvrage", width / 2, height / 4)
 
         }
         push()
-        translate(windowWidth - 25, 25);
-        fill(180)
+        textFont(fontRegular)
+        translate(windowWidth - 40, 40)
+        fill(255)
         noStroke()
-        ellipse(0, 0, 25, 25)
+        ellipse(0, 0, 40, 40)
         textAlign(CENTER, CENTER);
         fill(0)
-        textSize(20)
+        textSize(28)
         text("?", 0, 0)
         pop()
     }

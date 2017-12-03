@@ -67,6 +67,7 @@ function preload() {
 
 function setup() {
     createCanvas(windowWidth, windowHeight)
+    pixelDensity(1)
     background(255, 0, 0, 1)
     randomSeed(3141);
     for (var i = 0; i < lieux.length; i++) {
@@ -227,7 +228,7 @@ function Title() {
         text(character, this.l - padding / 2 + spacing, 0)
             //rect(this.l / 2 + padding + spacing + cWidth * 2 + spacing, -36, 10, -3)
             // textAlign(CENTER, CENTER);
-        text(name + " : Identités ", this.l + padding + spacing + cWidth * 2 + spacing + 10, 0)
+        text(name , this.l + padding + spacing + cWidth * 2 + spacing + 10, 0)
         pop();
     }
 }
