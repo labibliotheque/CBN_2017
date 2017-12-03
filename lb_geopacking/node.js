@@ -112,7 +112,14 @@ Node.prototype.over = function (x, y) {
 
         if (delta < 10 + this.diameter) {
             push()
-            fill(255)
+            if (blackTheme) {
+        fill(255);
+        stroke(255);
+    } else {
+        fill(0);
+        stroke(0);
+    }
+
             textFont(fontRegular)
             textSize(18)
             text(this.data.lieu + " - " + this.data.date  ,this.location.x,this.location.y-16)

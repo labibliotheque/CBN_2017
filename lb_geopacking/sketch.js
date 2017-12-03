@@ -1,5 +1,3 @@
-// faire de l'"action painting via des agents en dessinant leur chemin dans un buffer offscreen
-
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 var lieux = [
@@ -34,17 +32,17 @@ var fontRegular
 var img = new Image;
 var pg;
 var coordinates = {
-    "Bourg": [0.247, 0.671]
-    , "Haute Chaussée": [0.136, 0.758]
-    , "Charles-Gautier-Hermeland": [0.493, 0.328]
-    , "Bellevue": [0.530, 0.746]
-    , "Ludothèque Municipale": [0.486, 0.929]
-    , "Gao Xingjian - Sillon": [0.602, 0.147]
+    "Bourg": [0.247, 0.671],
+    "Haute Chaussée": [0.136, 0.758],
+    "Charles-Gautier-Hermeland": [0.493, 0.328],
+    "Bellevue": [0.530, 0.746],
+    "Ludothèque Municipale": [0.486, 0.929],
+    "Gao Xingjian - Sillon": [0.602, 0.147]
 }
 var nodes = []
-    //gui
+//gui
 var settings
-    // sequencing
+// sequencing
 var myPart // un metronome
 var index = 1 // la position du sequenceur
 var beat = 0;
@@ -58,11 +56,13 @@ var drawBack = true;
 var drawLegend = true;
 var drawNames = true;
 
+var blackTheme = true;
+
 function preload() {
     db = loadJSON("../data/db.json");
     fontBold = loadFont("../assets/RenneBolArcTyp.otf")
     fontRegular = loadFont("../assets/RenneArcTyp.otf")
-    img.src = "../assets/fond_carte_no_text.svg";
+    img.src = "../assets/fond_carte_no_text_white.svg";
     // png = loadImage('../assets/fond_de_carte_no_text.png')
 }
 
@@ -75,15 +75,21 @@ function setup() {
     textAlign(CENTER, CENTER);
     textFont(fontBold);
     textSize(25)
-        //
+    //
     myPart = new p5.Part();
     var pulse = new p5.Phrase('pulse', step, [1, 1, 1, 1, 1]);
     myPart.addPhrase(pulse); // on ajoute notre phrase à l'objet part
     myPart.setBPM(playbackS);
     myPart.start();
     myPart.loop();
-    settings = QuickSettings.create(windowWidth - 475, 25, "Informations et parmètres");
+
+    button = createSpan('<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true" ></i>');
+    button.mousePressed(playBack);
+    button.position(20, 95);
+
+    settings = QuickSettings.create(windowWidth - 475, 25, "v Informations et paramètres");
     settings.setWidth(450);
+    settings.collapse();
     settings.addHTML("Informations", "<p>Cette visualisation représente la diffusion des ouvrages dans son environnement. Chaque jour un lieu produit un ensemble de points colorés, correspondant au nombre de prêts pour chaque catégorie documentaire. Ces points se disséminent dans l'espace en laissant une trace sur un fond de carte représentant les différents lieux du réseau.</p>");
     settings.addHTML("Sélectionner les dates concernées", "");
     settings.addDate("Date de début", "2017-01-01", selectDateB);
@@ -93,6 +99,7 @@ function setup() {
     settings.addBoolean("Jouer", true, playBack);
     settings.addRange("Vitesse", 15, 40, 25, 1, playbackSpeed);
     settings.addHTML("Paramètres de Calques", "");
+    settings.addBoolean("Theme foncé", true, themeCallback);
     settings.addBoolean("Afficher la légende", true, legendCallback);
     settings.addBoolean("Afficher le nom des lieux", true, namesCallback);
     settings.addBoolean("Afficher le fond de carte", true, drawBackCallback);
@@ -102,27 +109,20 @@ function setup() {
 
     imageMode(CENTER);
 
-    drawingContext.shadowOffsetX = 2;
-    drawingContext.shadowOffsetY = 2;
-    drawingContext.shadowColor = "white ";
-    drawingContext.shadowBlur = 5;
-
     title = new Title();
 }
 
 function draw() {
-    background(0);
-
-     drawingContext.shadowOffsetX = 2;
-    drawingContext.shadowOffsetY = 2;
-    drawingContext.shadowColor = "white ";
-    drawingContext.shadowBlur = 5;
+    if (!blackTheme) {
+        background(255);
+    } else {
+        background(0)
+    }
 
     if (index > stopIndex) {
         if (loop) {
             index = 1;
-        }
-        else {
+        } else {
             play = false;
             index = 1;
         }
@@ -132,18 +132,27 @@ function draw() {
 
     if (drawPg) image(pg, windowWidth / 2, windowHeight / 2, windowWidth, windowHeight);
     /* update and display the data*/
+
     for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].location.x < 0 || nodes[i].location.y > windowWidth) {
+            nodes.splice(i, 1)
+        } else if (nodes[i].location.y < 0 || nodes[i].location.y > windowHeight) {
+            nodes.splice(i, 1)
+        }
+    }
+    for (var i = 0; i < nodes.length; i++) {
+        if (nodes[i].life < 5) {
+            nodes.splice(i, 1)
+        }
+    }
+    for (var i = 0; i < nodes.length; i++) {
+
         /* update life*/
         nodes[i].life -= 0.10;
         nodes[i].diameter -= 0.113;
-        if (nodes[i].life < 5) nodes.splice(i, 1)
+
         nodes[i].update();
-        if (nodes[i].location.x < 0 || nodes[i].location.y > windowWidth) {
-            nodes.splice(i, 1)
-        }
-        else if (nodes[i].location.y < 0 || nodes[i].location.y > windowHeight) {
-            nodes.splice(i, 1)
-        }
+
         if (drawNodes) nodes[i].display();
         nodes[i].displayOffscreen(pg, nodes);
         for (var j = 0; j < nodes.length; j++) {
@@ -152,64 +161,86 @@ function draw() {
             }
         }
         nodes[i].over(mouseX, mouseY)
+
+
     }
+
     /* draw background image*/
 
     if (drawBack) {
-
         drawingContext.drawImage(img, windowWidth / 4, windowHeight / 4, windowWidth / 2, windowHeight / 2);
-
-
     }
 
-    if (drawNames){
+    if (drawNames) {
         /* draw names*/
         push();
         textAlign(CENTER, CENTER);
         textFont(fontBold)
         textSize(20)
-        fill(0)
+        if (blackTheme) {
+            fill(255);
+            stroke(255);
+        } else {
+            fill(0);
+            stroke(0);
+        }
         for (var i = 0; i < lieux.length; i++) {
             text(lieux[i], coordinates[lieux[i]][0] * windowWidth / 2 + windowWidth / 4, coordinates[lieux[i]][1] * windowHeight / 2 + windowHeight / 4)
         }
         pop()
     }
 
-    if (drawLegend){
-    /* draw color legend*/
-    push()
-    for (var i = 0; i < emplacements.length; i++) {
-        var h = map(i, 0, emplacements.length, 0, 320)
-        textAlign(LEFT, CENTER)
-        noStroke();
-        fill(h, 100, 100)
-        ellipse(25, windowHeight - 50 - i * 20, 15, 15)
-        fill(180)
-        textFont(fontRegular)
-        textSize(15)
-        text(emplacements[i], 40, windowHeight - 50 - i * 20)
+    if (drawLegend) {
+        /* draw color legend*/
+        push()
+        for (var i = 0; i < emplacements.length; i++) {
+            var h = map(i, 0, emplacements.length, 0, 320)
+            textAlign(LEFT, CENTER)
+            noStroke();
+            fill(h, 100, 100)
+            ellipse(25, windowHeight - 50 - i * 20, 15, 15)
+            if (blackTheme) {
+                fill(180)
+            } else {
+                fill(0);
+            }
+            textFont(fontRegular)
+            textSize(15)
+            text(emplacements[i], 40, windowHeight - 50 - i * 20)
+        }
+        pop()
     }
-    pop()
-    }
 
-     drawingContext.shadowOffsetX = 0;
-    drawingContext.shadowOffsetY = 0;
-
-    drawingContext.shadowBlur = 0;
 
     push()
-    textAlign(LEFT, BOTTOM);
-    fill(255);
-    stroke(255);
+    textAlign(LEFT, TOP);
+    if (blackTheme) {
+        fill(255);
+        stroke(255);
+    } else {
+        fill(0);
+        stroke(0);
+    }
     var d = db[index].date.split("/")
     var date = new Date(d[2], d[0] - 1, d[1])
     textSize(24)
     var content = jours[date.getDay()] + " " + date.getDate() + " " + mois[date.getMonth()] + " " + date.getFullYear() + " - " + db[index].Tous.total + " prêts";
-    text(content, 25, 125);
+    text(content, 60, 85);
     pop();
 
     title.update();
     title.draw();
+}
+
+function themeCallback(data) {
+    blackTheme = data
+    if (blackTheme) {
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-play fa-2x" aria-hidden="true"></i>';
+        img.src = "../assets/fond_carte_no_text_white.svg";
+    } else {
+        button.elt.innerHTML = '<i class="fa fa-play fa-2x" aria-hidden="true"></i>';
+        img.src = "../assets/fond_carte_no_text.svg";
+    }
 }
 
 function drawNodesCallback(data) {
@@ -228,16 +259,19 @@ function drawBackCallback(data) {
 function legendCallback(data) {
     drawLegend = data;
 }
+
 function namesCallback(data) {
     drawNames = data;
 }
 
 function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
+    settings.setPosition(windowWidth - 475, 25);
+    settings.setWidth(450);
 }
 
 
-function resetPgCallback(){
+function resetPgCallback() {
     pg.background(0);
 }
 
@@ -246,7 +280,7 @@ function resetPgCallback(){
 function step() {
     beat += 1;
     beat = beat % lieux.length
-        //console.log(beat, lieux[beat]);
+    //console.log(beat, lieux[beat]);
     if (play) {
         if (beat == 0) index += 1;
         for (var j = 0; j < emplacements.length; j++) {
@@ -259,10 +293,10 @@ function step() {
             var e = emplacements[j]
             var v = db[index][lieux[beat]][emplacements[j]]
             var data = {
-                date: d
-                , lieu: l
-                , emplacement: e
-                , valeur: v
+                date: d,
+                lieu: l,
+                emplacement: e,
+                valeur: v
             }
             if (int(v) != 0) {
                 var n = new Node(xpos + random(-15, 15), ypos + random(-15, 15), h, s, data)
@@ -274,8 +308,15 @@ function step() {
 }
 
 function playBack(data) {
-    play = data;
-    myPart.stop();
+    play = !play
+    if (!play) {
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-play fa-2x" aria-hidden="true"></i>';
+        myPart.stop();
+    } else {
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true"></i>';
+        myPart.start();
+    }
+
 }
 
 function playbackSpeed(data) {
@@ -292,11 +333,16 @@ function selectDateB() {
     var date = new Date(int(selectedStartDate[0]), int(selectedStartDate[1] - 1), int(selectedStartDate[2]));
     date = date.toLocaleDateString();
     for (var i = 1; i < Object.keys(db).length - 1; i++) {
-        if (db[i]["date"] == date) {
-            index = i
+        var dbDate = db[i]["date"].split("/")
+        var dbDateObj = new Date(int(dbDate[2]), int(dbDate[0] - 1), int(dbDate[1]))
+        dbDateObj = dbDateObj.toLocaleDateString()
+        if (dbDateObj == date) {
+            startIndex = i
+            console.log("found")
             break
         }
     }
+    index = startIndex
 }
 
 function selectDateE() {
@@ -304,13 +350,15 @@ function selectDateE() {
     var date = new Date(int(selectedStopDate[0]), int(selectedStopDate[1] - 1), int(selectedStopDate[2]));
     date = date.toLocaleDateString();
     for (var i = 1; i < Object.keys(db).length - 1; i++) {
-        if (db[i]["date"] == date) {
+        var dbDate = db[i]["date"].split("/")
+        var dbDateObj = new Date(int(dbDate[2]), int(dbDate[0] - 1), int(dbDate[1]))
+        dbDateObj = dbDateObj.toLocaleDateString()
+        if (dbDateObj == date) {
             stopIndex = i
             break
         }
     }
 }
-
 
 function Title() {
     this.newL = 0;
@@ -327,25 +375,32 @@ function Title() {
         for (var i = 0; i < lieux.length; i++) {
             total += int(db[index][lieux[i]].total)
         }
-        this.newL = map(total, 0, db[0]["Max_Total"], 25, 500)
+        this.newL = map(total, 0, db[0]["Max_Total"], 10, windowWidth / 4)
     }
     this.draw = function () {
         push()
         rectMode(CORNER);
         translate(25, 25);
-        stroke(255)
+
         strokeWeight(1)
-        fill(255)
+
         textFont(fontRegular)
+        if (blackTheme) {
+            fill(255);
+            stroke(255);
+        } else {
+            fill(0);
+            stroke(0);
+        }
         textSize(48)
         this.l += (this.newL - this.l) * 0.075
-            // draw L with variable length
+        // draw L with variable length
         rect(0, 36, this.l, -3)
         rect(0, 0, -3, 36)
-            // draw A
+        // draw A
         textAlign(LEFT, TOP);
         text(this.character, this.l + this.spacing, 0)
-        text(this.name + " : Semis ", this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
+        text(this.name, this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
         pop();
     }
 }
