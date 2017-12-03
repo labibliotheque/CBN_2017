@@ -59,6 +59,7 @@ var drawNames = true;
 var blackTheme = true;
 
 function preload() {
+
     db = loadJSON("../data/db.json");
     fontBold = loadFont("../assets/RenneBolArcTyp.otf")
     fontRegular = loadFont("../assets/RenneArcTyp.otf")
@@ -67,6 +68,7 @@ function preload() {
 }
 
 function setup() {
+
     createCanvas(windowWidth, windowHeight);
     pixelDensity(1)
     pg = createGraphics(windowWidth, windowHeight);
@@ -85,7 +87,7 @@ function setup() {
 
     button = createSpan('<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true" ></i>');
     button.mousePressed(playBack);
-    button.position(20, 95);
+    button.position(20, 80);
 
     settings = QuickSettings.create(windowWidth - 475, 25, "v Informations et paramètres");
     settings.setWidth(450);
@@ -110,9 +112,11 @@ function setup() {
     imageMode(CENTER);
 
     title = new Title();
+
 }
 
 function draw() {
+
     if (!blackTheme) {
         background(255);
     } else {
@@ -148,6 +152,7 @@ function draw() {
     for (var i = 0; i < nodes.length; i++) {
 
         /* update life*/
+
         nodes[i].life -= 0.10;
         nodes[i].diameter -= 0.113;
 
@@ -173,6 +178,7 @@ function draw() {
 
     if (drawNames) {
         /* draw names*/
+
         push();
         textAlign(CENTER, CENTER);
         textFont(fontBold)
@@ -192,6 +198,7 @@ function draw() {
 
     if (drawLegend) {
         /* draw color legend*/
+
         push()
         for (var i = 0; i < emplacements.length; i++) {
             var h = map(i, 0, emplacements.length, 0, 320)
@@ -230,6 +237,7 @@ function draw() {
 
     title.update();
     title.draw();
+
 }
 
 function themeCallback(data) {
