@@ -161,7 +161,7 @@ function makeplay() {
     else {
         button.elt.innerHTML = '<i class="fa fa-pause fa-2x" aria-hidden="true"></i>';
     }
-    console.log(play)
+
 }
 
 function windowResized() {
