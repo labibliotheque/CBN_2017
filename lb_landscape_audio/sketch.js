@@ -1,7 +1,4 @@
-// pauser l'audio quand on change de fenetre
-// regarder ce qu'il se passe quand on entre une date non valide
 
-// passer à un synthétiseur polyphonique ou soundfont ?
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 /* Lieux*/
@@ -37,7 +34,7 @@ var fontRegular
     // buffers
 var buffer; // audio
 var imgBuffer, img; // graphic
-var yoffset = -2.0
+var yoffset = -1.55
     //gui
 var settings
     // sequencing
@@ -46,6 +43,7 @@ var myPart // un metronome
 var index = 1 // la position du sequenceur
 var beat = 0;
 var playbackS = 90 // la vitesse de défilement
+var startIndex =1;
 var stopIndex = 31;
 var loop = true;
 var play = true;
@@ -73,8 +71,9 @@ function preload() {
 function setup() {
     createCanvas(windowWidth, windowHeight);
     pixelDensity(1)
-    background(0);
+
     colorMode(HSB, 360, 100, 100);
+     background(200,100,60);
     //frameRate(1)
     textAlign(LEFT, TOP);
     textFont(fontBold);
@@ -100,17 +99,22 @@ function setup() {
     img = createGraphics(windowWidth, windowHeight);
     imgBuffer = createGraphics(windowWidth, windowHeight);
     //imgBuffer.background(0);
+    img.colorMode(HSB, 360, 100, 100);
     img.background(0);
     imgBuffer.colorMode(HSB, 360, 100, 100);
     imgBuffer.background(200,100,20);
     //img.background(200,100,20);
     // moving title
     title = new Title();
+     button = createSpan('<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true" ></i>');
+    button.mousePressed(playBack);
+    button.position(20, 80);
     // gui window
-    settings = QuickSettings.create(windowWidth - 475, 25, "Informations et parmètres");
+    settings = QuickSettings.create(windowWidth - 475, 25, "v  Informations et paramètres");
+
     settings.collapse();
     settings.setWidth(450);
-    settings.addHTML("Informations", "<p>Cette page web permet de sonifier les données issues des statistiques de prêts. Les données sont interprétés comme des signaux audio (valeurs entre -1 et 1) et sont directement injectées dans la carte son de l'ordinateur.</p><p> Chaque jour dispose alors d'un son qui lui est propre généré directement à partir des statistiques d'emprunts des usagers.</p><p>Les jours sont marqués par un léger click et matérialisés par une barre blanche verticale, ils représentent des mesures musicales </p><p>Finalement, entre chaque 'pulsation' journalière, sont donnés à entendre les statistiques de totaux d'emprunt de chaque lieux pour la journée : plus le son est grave moins il y a eu d'emprunts.");
+    settings.addHTML("Informations", "<p>Cette page web permet de sonifier les données issues des statistiques de prêts. Les données sont interprétés comme des signaux audio (valeurs entre -1 et 1) et sont directement joués par la carte son de l'ordinateur.</p><p> Chaque jour dispose alors d'un son qui lui est propre généré directement à partir des statistiques d'emprunts des usagers.</p><p>Les jours sont marqués par un léger click et matérialisés par une barre blanche verticale, ils représentent des mesures musicales </p><p>Finalement, entre chaque 'pulsation' journalière, sont donnés à entendre les statistiques de totaux d'emprunt de chaque lieux pour la journée : plus le son est grave moins il y a eu d'emprunts.");
     settings.addHTML("Sélectionner les lieux à traiter", "");
     settings.addBoolean("Bourg", true, callbackLieu);
     settings.addBoolean("Haute Chaussée", true, callbackLieu);
@@ -124,11 +128,11 @@ function setup() {
     settings.addDate("Date de fin", "2017-01-31", selectDateE);
     settings.addBoolean("Boucler", true, loopCallback);
     settings.addHTML("Paramètres de Défilement", "");
-    settings.addBoolean("Jouer", true, playBack);
     settings.addRange("Vitesse", 60, 160, 90, 1, playbackSpeed);
     settings.addRange("Vitesse d'interpolation", 0.01, 1.0, 0.351, 0.025, interpolationSpeed);
-    settings.addRange("Perspective", -10, -0.25, -2.0, 0.05, callbackPerspective);
+    settings.addRange("Perspective", -10, -0.25, -1.55, 0.05, callbackPerspective);
 }
+
 
 function draw() {
     //background(0);
@@ -136,11 +140,11 @@ function draw() {
     image(img, 0, 0, windowWidth, windowHeight);
     if (index > stopIndex) {
         if (loop) {
-            index = 1;
+            index = startIndex;
         }
         else {
             play = false;
-            index = 1;
+            index = startIndex  ;
         }
     }
     if (play) update();
@@ -149,7 +153,7 @@ function draw() {
         textSize(18);
         textAlign(RIGHT, TOP);
         var xpos = map(i, 0, emplacements.length, 0, windowWidth * 2 / 3);
-        translate(xpos, windowHeight - 158);
+        translate(xpos, windowHeight - 155);
         rotate(-PI / 2);
         fill(map(i, 0, emplacements.length, 0, 320), 60, 100)
         text(emplacements[i], 0, 0);
@@ -182,14 +186,14 @@ function draw() {
         }
     }
     push()
-    textAlign(LEFT, BOTTOM);
+    textAlign(LEFT, TOP);
     fill(255);
     stroke(255);
     var d = db[index].date.split("/")
     var date = new Date(d[2], d[0] - 1, d[1])
     textSize(24)
     var content = jours[date.getDay()] + " " + date.getDate() + " " + mois[date.getMonth()] + " " + date.getFullYear() + " - " + db[index].Tous.total + " prêts";
-    text(content, 25, 125);
+    text(content, 60, 85);
     pop();
     title.update();
     title.draw();
@@ -218,7 +222,7 @@ function step() {
             imgBuffer.fill(200,100,20, 0.015);
             imgBuffer.rect(0, 0, imgBuffer.width * 2 / 3, windowHeight - 160);
             imgBuffer.stroke(255, 0.5);
-            imgBuffer.line(0, windowHeight / 2, 0, windowHeight - 160);
+            //imgBuffer.line(0, windowHeight / 2, 0, windowHeight - 160);
             imgBuffer.strokeWeight(5);
             imgBuffer.line(imgBuffer.width * 2 / 3, windowHeight / 2, imgBuffer.width * 2 / 3, windowHeight - 160);
         }
@@ -234,8 +238,16 @@ function callbackTotal(data) {
 }
 
 function playBack(data) {
-    play = data;
-    myPart.stop();
+   play = !play
+    if (!play) {
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-play fa-2x" aria-hidden="true"></i>';
+         myPart.stop();
+    }
+    else {
+        button.elt.innerHTML = '<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true"></i>';
+        myPart.start();
+    }
+
 }
 
 function playbackSpeed(data) {
@@ -248,7 +260,7 @@ function interpolationSpeed(data) {
 }
 
 function callbackLieu() {
-    //the data is used directly in the updateBuffer function ... yuck
+    //the data is used directly in the updateBuffer function ...
 }
 
 function loopCallback(data) {
@@ -260,11 +272,16 @@ function selectDateB() {
     var date = new Date(int(selectedStartDate[0]), int(selectedStartDate[1] - 1), int(selectedStartDate[2]));
     date = date.toLocaleDateString();
     for (var i = 1; i < Object.keys(db).length - 1; i++) {
-        if (db[i]["date"] == date) {
-            index = i
+        var dbDate = db[i]["date"].split("/")
+        var dbDateObj = new Date(int(dbDate[2]), int(dbDate[0]-1), int(dbDate[1]))
+        dbDateObj = dbDateObj.toLocaleDateString()
+        if (dbDateObj == date) {
+            startIndex = i
+            console.log("found")
             break
         }
     }
+    index = startIndex
 }
 
 function selectDateE() {
@@ -272,7 +289,10 @@ function selectDateE() {
     var date = new Date(int(selectedStopDate[0]), int(selectedStopDate[1] - 1), int(selectedStopDate[2]));
     date = date.toLocaleDateString();
     for (var i = 1; i < Object.keys(db).length - 1; i++) {
-        if (db[i]["date"] == date) {
+        var dbDate = db[i]["date"].split("/")
+        var dbDateObj = new Date(int(dbDate[2]), int(dbDate[0]-1), int(dbDate[1]))
+        dbDateObj = dbDateObj.toLocaleDateString()
+        if (dbDateObj== date) {
             stopIndex = i
             break
         }
@@ -357,10 +377,11 @@ function windowResized() {
     resizeCanvas(windowWidth, windowHeight);
     img = createGraphics(windowWidth, windowHeight);
     imgBuffer = createGraphics(windowWidth, windowHeight);
-    imgBuffer.background(0);
     imgBuffer.colorMode(HSB, 360, 100, 100);
+    imgBuffer.background(200,100,20);
+
     img.background(0);
-    settings.setPosition(windowWidth - 450, 0);
+    settings.setPosition(windowWidth - 475, 25   );
     settings.setWidth(450);
 }
 
@@ -379,7 +400,7 @@ function Title() {
         for (var i = 0; i < lieux.length; i++) {
             total += int(db[index][lieux[i]].total)
         }
-        this.newL = map(total, 0, db[0]["Max_Total"], 25, 500)
+        this.newL = map(total, 0, db[0]["Max_Total"], 10, windowWidth/4)
     }
     this.draw = function () {
         push()
@@ -397,7 +418,7 @@ function Title() {
             // draw A
         textAlign(LEFT, TOP);
         text(this.character, this.l + this.spacing, 0)
-        text(this.name + " : Sonification ", this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
+        text(this.name , this.l + this.padding + this.spacing + this.cWidth * 2 + this.spacing + 10, 0)
         pop();
     }
 }
