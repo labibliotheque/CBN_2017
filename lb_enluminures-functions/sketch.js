@@ -1,9 +1,4 @@
-    /*
 
-    ça rame un peu changer scribble ou le nombre de points pour la définition des formes
-
-
-*/
 var mois = ["Janvier", "Février", "Mars", "Avril", "Mai", "Juin", "Juillet", "Août", "Septembre", "Octobre", "Novembre", "Décembre"];
 var jours = ["Dimanche", "Lundi", "Mardi", "Mercredi", "Jeudi", "Vendredi", "Samedi"];
 var colorNames = ["bleu", "orange", "rouge", "vert", "jaune", "violet", "blanc"];
