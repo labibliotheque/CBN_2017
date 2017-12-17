@@ -85,7 +85,7 @@ function setup() {
     // gui
     button = createSpan('<i class="fa fa-pause fa-2x" aria-hidden="true" ></i>');
     button.mousePressed(makeplay);
-    button.position(windowWidth-53 , 75);
+    button.position(23 , 75);
    // button.size(500, 500);
 
     nDays = Object.keys(db).length - 1;
@@ -170,7 +170,7 @@ function windowResized() {
     slider.size(windowWidth / 2, 50);
     slider.position(windowWidth / 4, windowHeight - 75);
 
-    button.position(windowWidth-60 , 75);
+    button.position(23, 75);
 }
 
 function updateLogos() {
@@ -257,7 +257,17 @@ function Logo(lieu, sc) {
         textAlign(CENTER, CENTER);
         text(name, 0, 0)
         textSize(36)
+
+        if(this.lieu == lieux[4]){
+            this.lieu = "Ludothèque"
+        }
+        else if(this.lieu == lieux[5]){
+            this.lieu = "Gao-Xingjian"
+        }
+
         text(this.lieu, 0, 52)
+
+
         push()
         rotate(PI / 4)
         translate(0, height / 4)
@@ -367,8 +377,8 @@ function Legend() {
             textSize(16);
             fill(0)
             textAlign(LEFT, TOP)
-            text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 38, 106)
-            drawArrow(40, 100, -HALF_PI, 20)
+            text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 68, 166)
+            drawArrow(70, 150, -HALF_PI, 60)
             textAlign(LEFT, BOTTOM)
 
             var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
@@ -387,6 +397,7 @@ function Legend() {
         textAlign(CENTER, CENTER);
         fill(0)
         textSize(28)
+        textFont(fontRegular)
         text("?", 0, 0)
         pop()
     }

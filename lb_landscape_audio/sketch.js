@@ -120,8 +120,8 @@ function setup() {
     settings.addBoolean("Haute Chaussée", true, callbackLieu);
     settings.addBoolean("Charles-Gautier-Hermeland", true, callbackLieu);
     settings.addBoolean("Bellevue", true, callbackLieu);
-    settings.addBoolean("Ludothèque Municipale", true, callbackLieu);
-    settings.addBoolean("Gao Xingjian - Sillon", true, callbackLieu);
+    settings.addBoolean("Ludothèque", true, callbackLieu);
+    settings.addBoolean("Gao Xingjian", true, callbackLieu);
     settings.addBoolean("Totaux d'emprunts quotidien", true, callbackTotal);
     settings.addHTML("Sélectionner les dates concernées", "");
     settings.addDate("Date de début", "2017-01-01", selectDateB);
@@ -181,7 +181,14 @@ function draw() {
             translate(75 + i * (windowWidth * 2 / 3) / lieux.length, height / 2);
             fill(150);
             textSize(14);
-            text(lieux[i], 0, 0);
+            var lieu = lieux[i]
+            if(lieu == lieux[4]){
+                lieu = "Ludothèque"
+            }
+            else if(lieu == lieux[5]){
+                lieu = "Gao-Xingjian"
+            }
+            text(lieu, 0, 0);
             pop();
         }
     }
@@ -242,10 +249,12 @@ function playBack(data) {
     if (!play) {
         button.elt.innerHTML = '<i class="fa fa-inverse fa-play fa-2x" aria-hidden="true"></i>';
          myPart.stop();
+        masterVolume(0,1,0)
     }
     else {
         button.elt.innerHTML = '<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true"></i>';
         myPart.start();
+        masterVolume(1,1,0)
     }
 
 }
@@ -342,10 +351,10 @@ function updateAudioBuffer() {
             else if (lieux[indexLieu] == "Bellevue" && settings.getValuesAsJSON(false)["Bellevue"] == true) {
                 data[i] += (t - data[i]) * interSpeed
             }
-            else if (lieux[indexLieu] == "Ludothèque Municipale" && settings.getValuesAsJSON(false)["Ludothèque Municipale"] == true) {
+            else if (lieux[indexLieu] == "Ludothèque Municipale" && settings.getValuesAsJSON(false)["Ludothèque"] == true) {
                 data[i] += (t - data[i]) * interSpeed
             }
-            else if (lieux[indexLieu] == "Gao Xingjian - Sillon" && settings.getValuesAsJSON(false)["Gao Xingjian - Sillon"] == true) {
+            else if (lieux[indexLieu] == "Gao Xingjian - Sillon" && settings.getValuesAsJSON(false)["Gao Xingjian"] == true) {
                 data[i] += (t - data[i]) * interSpeed
             }
             else {

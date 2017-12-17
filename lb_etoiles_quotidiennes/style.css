@@ -13,19 +13,6 @@ html{
 }
 
 
-button{
-    -moz-appearance: none;
-    color: white;
-	font-family : 'Homemade Apple', cursive;
-    background-color: #000100;
-    outline : 1px;
-    border : 0px;
-    outline-color: white;
-	font-size:20px;
-	padding-bottom: 00px;
-    border-radius: 10px;
-     box-shadow: 2px 2px 2px #FFFFFF;
-}
 
 
 input[type=range] {

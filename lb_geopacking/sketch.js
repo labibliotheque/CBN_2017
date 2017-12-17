@@ -105,7 +105,7 @@ function setup() {
     settings.addBoolean("Afficher la légende", true, legendCallback);
     settings.addBoolean("Afficher le nom des lieux", true, namesCallback);
     settings.addBoolean("Afficher le fond de carte", true, drawBackCallback);
-    settings.addBoolean("Afficher les agents", true, drawNodesCallback);
+    settings.addBoolean("Afficher les points", true, drawNodesCallback);
     settings.addBoolean("Afficher l'image générée", true, drawPgCallback);
     settings.addButton("Effacer l'image générée", resetPgCallback);
 
@@ -191,7 +191,14 @@ function draw() {
             stroke(0);
         }
         for (var i = 0; i < lieux.length; i++) {
-            text(lieux[i], coordinates[lieux[i]][0] * windowWidth / 2 + windowWidth / 4, coordinates[lieux[i]][1] * windowHeight / 2 + windowHeight / 4)
+            var l = lieux[i]
+            if (l == lieux[4]) {
+                l = "Ludothèque"
+            } else if (l == lieux[5 ]) {
+                l = "Gao-Xingjian"
+            }
+
+            text(l, coordinates[lieux[i]][0] * windowWidth / 2 + windowWidth / 4, coordinates[lieux[i]][1] * windowHeight / 2 + windowHeight / 4)
         }
         pop()
     }

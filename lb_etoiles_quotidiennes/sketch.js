@@ -53,7 +53,7 @@ function setup() {
     // gui
      button = createSpan('<i class="fa fa-inverse fa-pause fa-2x" aria-hidden="true" ></i>');
     button.mousePressed(makeplay);
-    button.position(windowWidth-53, 75);
+    button.position(23, 75);
     //button.size(75, 50);
     nDays = Object.keys(db).length - 1;
     slider = createSlider(1, nDays, 1, 1);
@@ -129,6 +129,7 @@ function draw() {
     title.update();
     title.draw();
     // draw explanations
+    textFont(fontBold)
     legend.isOver(mouseX,mouseY);
     legend.draw();
 }
@@ -151,7 +152,7 @@ function windowResized() {
     resizeCanvas(windowWidth, windowHeight)
     slider.size(windowWidth / 2, 50);
     slider.position(windowWidth / 4, windowHeight - 75);
-    button.position(25, windowHeight - 75);
+    button.position(23, 75);
     pg = createGraphics(width, height);
 }
 
@@ -241,6 +242,12 @@ function Star(innerR, outterR) {
         translate(-width / 3, 0)
         textAlign(LEFT, BOTTOM);
         textSize(24);
+        if(lieu == lieux[5]){
+            lieu = "Ludothèque"
+        }
+        else if(lieu == lieux[6]){
+            lieu = "Gao-Xingjian"
+        }
         text(lieu, 0, -12);
         textSize(18)
         if (data["top-emplacement"] !== "" && data["top-emplacement"] !== undefined) {
@@ -318,8 +325,8 @@ function Legend() {
             textSize(16);
             fill(255)
             textAlign(LEFT, TOP)
-            text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 38, 106)
-            drawArrow(40, 100, -HALF_PI, 20)
+            text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 68, 166)
+            drawArrow(70, 150, -HALF_PI, 60)
 
             var xoffset = map(slider.value(), 1, nDays, windowWidth / 4, windowWidth * 3 / 4);
             text("Déplacez ce curseur pour changer la date manuellement", xoffset, windowHeight - 135)
@@ -329,14 +336,14 @@ function Legend() {
 
         }
         push()
-        textFont(fontRegular)
         translate(windowWidth - 40, 40)
         fill(255)
         noStroke()
         ellipse(0, 0, 40, 40)
         textAlign(CENTER, CENTER);
         fill(0)
-        textSize(28)
+        textSize(26)
+        textFont(fontRegular)
         text("?", 0, 0)
         pop()
     }
