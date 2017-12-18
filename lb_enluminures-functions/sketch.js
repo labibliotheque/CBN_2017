@@ -377,7 +377,7 @@ function Legend() {
             textSize(16);
             fill(0)
             textAlign(LEFT, TOP)
-            text("La taille de la barre des 'L' dépend de la quantité de documents sortis pour la journée sélectionnée", 68, 166)
+            text("  La taille du L varie en fonction du nombre de prêts effectués par jour", 68, 166)
             drawArrow(70, 150, -HALF_PI, 60)
             textAlign(LEFT, BOTTOM)
 

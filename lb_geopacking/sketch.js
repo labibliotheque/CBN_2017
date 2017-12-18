@@ -95,7 +95,7 @@ function setup() {
     settings.addHTML("Informations", "<p>Cette visualisation représente la diffusion des ouvrages dans son environnement. Chaque jour un lieu produit un ensemble de points colorés, correspondant au nombre de prêts pour chaque catégorie documentaire. Ces points se disséminent dans l'espace en laissant une trace sur un fond de carte représentant les différents lieux du réseau.</p>");
     settings.addHTML("Sélectionner les dates concernées", "");
     settings.addDate("Date de début", "2017-01-01", selectDateB);
-    settings.addDate("Date de fin", "2017-01-31", selectDateE);
+    settings.addDate("Date de fin", "2017-11-30 ", selectDateE);
     settings.addBoolean("Boucler", true, loopCallback);
     settings.addHTML("Paramètres de Défilement", "");
     settings.addBoolean("Jouer", true, playBack);
@@ -250,9 +250,11 @@ function draw() {
 function themeCallback(data) {
     blackTheme = data
     if (blackTheme) {
+        pg.background(0)
         button.elt.innerHTML = '<i class="fa fa-inverse fa-play fa-2x" aria-hidden="true"></i>';
         img.src = "../assets/fond_carte_no_text_white.svg";
     } else {
+        pg.background(255)
         button.elt.innerHTML = '<i class="fa fa-play fa-2x" aria-hidden="true"></i>';
         img.src = "../assets/fond_carte_no_text.svg";
     }
@@ -287,7 +289,12 @@ function windowResized() {
 
 
 function resetPgCallback() {
-    pg.background(0);
+     if (blackTheme) {
+         pg.background(0)
+     }
+    else {
+        pg.background(255);
+    }
 }
 
 

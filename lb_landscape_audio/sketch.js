@@ -114,7 +114,7 @@ function setup() {
 
     settings.collapse();
     settings.setWidth(450);
-    settings.addHTML("Informations", "<p>Cette page web permet de sonifier les données issues des statistiques de prêts. Les données sont interprétés comme des signaux audio (valeurs entre -1 et 1) et sont directement joués par la carte son de l'ordinateur.</p><p> Chaque jour dispose alors d'un son qui lui est propre généré directement à partir des statistiques d'emprunts des usagers.</p><p>Les jours sont marqués par un léger click et matérialisés par une barre blanche verticale, ils représentent des mesures musicales </p><p>Finalement, entre chaque 'pulsation' journalière, sont donnés à entendre les statistiques de totaux d'emprunt de chaque lieux pour la journée : plus le son est grave moins il y a eu d'emprunts.");
+    settings.addHTML("Informations", "<p>Cette page web traduit en sons les volumes de prêts réalisés quotidiennement. Les données statistiques sont interprétées comme des signaux audio et sont directement joués par la carte son de l'ordinateur.</p><p>Chaque jour est représenté par un son qui lui est propre.</p><p>Le passage des jours se matérialise par un léger click et par la barre blanche verticale. Ils représentent des mesures musicales.</p><p>Vous entendez sur cette page la musique générée par le nombre total de prêts réalisés chaque jour dans chacune des bibliothèques et ludothèques du réseau La bibliothèque : plus le son est grave, moins il y a eu de prêts.</p>");
     settings.addHTML("Sélectionner les lieux à traiter", "");
     settings.addBoolean("Bourg", true, callbackLieu);
     settings.addBoolean("Haute Chaussée", true, callbackLieu);
@@ -125,7 +125,7 @@ function setup() {
     settings.addBoolean("Totaux d'emprunts quotidien", true, callbackTotal);
     settings.addHTML("Sélectionner les dates concernées", "");
     settings.addDate("Date de début", "2017-01-01", selectDateB);
-    settings.addDate("Date de fin", "2017-01-31", selectDateE);
+    settings.addDate("Date de fin", "2017-11-30", selectDateE);
     settings.addBoolean("Boucler", true, loopCallback);
     settings.addHTML("Paramètres de Défilement", "");
     settings.addRange("Vitesse", 60, 160, 90, 1, playbackSpeed);
